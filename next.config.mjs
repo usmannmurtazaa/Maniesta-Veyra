@@ -26,16 +26,24 @@ const nextConfig = {
       },
     ];
   },
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // Prevent Konva from trying to load the node-only 'canvas' module in client bundle
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        canvas: false,
+      };
+    }
+    return config;
+  },
 };
 
-// Initialize Serwist wrapper with its own config
 const withSerwist = withSerwistInit({
   swSrc: 'src/sw.ts',
   swDest: 'public/sw.js',
   disable: process.env.NODE_ENV === 'development',
 });
 
-// Apply Serwist first, then Sentry
 export default withSentryConfig(withSerwist(nextConfig), {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
