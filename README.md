@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<img src="/icons/icon-512.png" alt="Maniesta Veyra Logo" width="120" height="120" style="border-radius: 20px;">
+<img src="/public/icons/icon-512.png" alt="Maniesta Veyra Logo" width="120" height="120" style="border-radius: 20px;">
 
 ## **Wear Your Identity.**
 
