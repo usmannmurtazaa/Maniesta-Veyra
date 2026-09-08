@@ -1,33 +1,49 @@
 # Maniesta Veyra
 
-**Wear Your Identity.**
+<div align="center">
 
-Maniesta Veyra is a premium clothing e-commerce platform with a fully integrated **Custom Print Studio**. Customers can browse and purchase ready-made fashion, or upload their own designs, preview them on garments, and order custom-printed shirts.
+<img src="/icons/icon-512.png" alt="Maniesta Veyra Logo" width="120" height="120" style="border-radius: 20px;">
 
-Built with modern web technologies, the platform is production-ready, secure, SEO-optimized, and installable on Android devices.
+## **Wear Your Identity.**
+
+**Premium Clothing E-Commerce + Custom Print Studio**
+
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js&logoColor=white)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Prisma](https://img.shields.io/badge/Prisma-6-2D3748?logo=prisma&logoColor=white)](https://www.prisma.io/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+</div>
 
 ---
 
-## ✨ Features
+## 🌟 Overview
 
-### Ready-Made Store
-- Browse products by category, collection, and search
+Maniesta Veyra is a full‑featured, production‑ready fashion e‑commerce platform built with modern web technologies. It seamlessly combines a **ready‑made clothing store** with a powerful **Custom Print Studio**, allowing customers to upload their own designs, preview them in real time, and order personalised garments.
+
+---
+
+## ✨ Key Features
+
+### 🛍️ Ready‑Made Store
+- Browse by category, collection, and search
 - Advanced filtering (price, size, color, rating, availability)
-- Product details with gallery, zoom, variant selection (color/size)
+- Product details with gallery, zoom, variant selection
 - Wishlist, cart, checkout (COD, Bank Transfer, optional online payment)
 - Customer accounts, order history, address book
-- Product reviews and ratings
+- Reviews & ratings
 
-### Custom Print Studio
+### 🎨 Custom Print Studio
 - Dedicated landing page (`/custom-shirts`) and editor (`/customize`)
-- Garment selection: T-Shirt, Oversized, Polo, Hoodie, Sweatshirt
-- Per-location artwork (Front, Back, Left Sleeve, Right Sleeve)
+- Garment selection: T‑Shirt, Oversized, Polo, Hoodie, Sweatshirt
+- Per‑location artwork (Front, Back, Left Sleeve, Right Sleeve)
 - Upload designs (PNG, JPG, WebP, SVG – max 10 MB)
-- Interactive canvas editor using **Konva.js** (drag, resize, rotate, boundary constraints)
-- Live preview and server-calculated dynamic pricing
+- Interactive canvas editor (drag, resize, rotate, boundary constraints)
+- Live preview with server‑calculated dynamic pricing
 - Custom order tracking with status workflow
 
-### Admin Dashboard
+### 🛠️ Admin Dashboard
 - Sales analytics and trends
 - Product, category, inventory management
 - Order and custom order management (design review, status updates)
@@ -47,7 +63,7 @@ Built with modern web technologies, the platform is production-ready, secure, SE
 | Forms       | React Hook Form + Zod |
 | Database    | PostgreSQL (Supabase), Prisma ORM |
 | Auth        | Auth.js (NextAuth v5), JWT sessions, bcrypt |
-| Canvas      | Konva.js + react-konva |
+| Canvas      | Konva.js + react‑konva |
 | Payments    | COD, Bank Transfer, Stripe (optional, abstracted) |
 | Email       | Resend |
 | Rate Limit  | Upstash Redis |
@@ -65,7 +81,7 @@ Built with modern web technologies, the platform is production-ready, secure, SE
 - Node.js ≥ 20.x
 - npm ≥ 10.x
 - PostgreSQL database (Supabase recommended)
-- Vercel Blob storage (or S3-compatible)
+- Vercel Blob storage (or S3‑compatible)
 - Resend API key (for emails)
 - Upstash Redis (for rate limiting)
 
@@ -155,20 +171,20 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 
 ## 📦 Scripts
 
-| Command               | Description                          |
-|-----------------------|--------------------------------------|
-| `npm run dev`         | Start development server             |
-| `npm run build`       | Production build                     |
-| `npm run start`       | Start production server              |
-| `npm run lint`        | Run ESLint                           |
-| `npm run test`        | Run unit tests (Vitest)              |
-| `npm run test:coverage` | Run tests with coverage report     |
-| `npm run test:e2e`    | Run Playwright E2E tests             |
-| `npm run db:generate` | Generate Prisma client               |
-| `npm run db:migrate`  | Run database migrations              |
-| `npm run db:seed`     | Seed database with sample data       |
-| `npm run generate-icons` | Generate PWA icons from SVG source  |
-| `npm run lighthouse`  | Run Lighthouse CI checks             |
+| Command                 | Description                          |
+|-------------------------|--------------------------------------|
+| `npm run dev`           | Start development server             |
+| `npm run build`         | Production build                     |
+| `npm run start`         | Start production server              |
+| `npm run lint`          | Run ESLint                           |
+| `npm run test`          | Run unit tests (Vitest)              |
+| `npm run test:coverage` | Run tests with coverage report       |
+| `npm run test:e2e`      | Run Playwright E2E tests             |
+| `npm run db:generate`   | Generate Prisma client               |
+| `npm run db:migrate`    | Run database migrations              |
+| `npm run db:seed`       | Seed database with sample data       |
+| `npm run generate-icons`| Generate PWA icons from SVG source   |
+| `npm run lighthouse`    | Run Lighthouse CI checks             |
 
 ---
 
@@ -204,13 +220,13 @@ maniesta-veyra/
 
 ## 🔐 Security
 
-- **Authentication**: Auth.js v5 with JWT sessions, HTTP-only cookies, bcrypt password hashing (cost 12)
-- **Authorization**: Server-side guards (`requireAuth`, `requireAdmin`, `requireSuperAdmin`) on all sensitive routes
+- **Authentication**: Auth.js v5 with JWT sessions, HTTP‑only cookies, bcrypt hashing (cost 12)
+- **Authorization**: Server‑side guards (`requireAuth`, `requireAdmin`, `requireSuperAdmin`) on all sensitive routes
 - **Rate Limiting**: Upstash Redis sliding window on login, registration, uploads, coupons, and order creation
-- **Upload Validation**: Magic-byte checks, MIME validation, size limits, SVG sanitization with `isomorphic-dompurify`
+- **Upload Validation**: Magic‑byte checks, MIME validation, size limits, SVG sanitization with `isomorphic-dompurify`
 - **Inventory Safety**: Atomic `UPDATE ... WHERE stock >= quantity` inside transactions to prevent overselling
 - **Idempotency**: Order creation supports `Idempotency-Key` to prevent duplicate orders
-- **Security Headers**: CSP, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy
+- **Security Headers**: CSP, X‑Content‑Type‑Options, X‑Frame‑Options, Referrer‑Policy, Permissions‑Policy
 
 ---
 
