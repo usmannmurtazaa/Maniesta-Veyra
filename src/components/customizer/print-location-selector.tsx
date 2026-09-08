@@ -4,6 +4,7 @@ import { PrintLocation } from '@prisma/client';
 import { useCustomizerStore } from '@/stores/customizer-store';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 
 const locations = [
   PrintLocation.FRONT,

@@ -1,11 +1,6 @@
 import { Prisma, PrintLocation } from '@prisma/client';
 import { prisma } from '@/lib/db/prisma';
 
-interface PrintLocationConfig {
-  location: PrintLocation;
-  designSqInches?: number; // for large print surcharge
-}
-
 export class CustomPricingService {
   async calculatePrice(input: {
     garmentId: string;
@@ -25,7 +20,7 @@ export class CustomPricingService {
     });
     if (!garment) throw new Error('Garment not found');
 
-    let baseGarmentPrice = garment.basePrice;
+    const baseGarmentPrice = garment.basePrice;
     let printLocationCost = new Prisma.Decimal(0);
 
     for (const location of printLocations) {
