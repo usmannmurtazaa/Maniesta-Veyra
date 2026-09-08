@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Brand tokens */
+    --mv-primary: #1A1A2E;
+    --mv-primary-hover: #16213E;
+    --mv-primary-light: #2A2A45;
+    --mv-accent: #C0392B;
+    --mv-accent-hover: #A93226;
+    --mv-accent-light: #E74C3C;
+    --mv-bg: #FAFAFA;
+    --mv-bg-alt: #F5F5F0;
+    --mv-dark: #111118;
+    --mv-text: #1A1A2E;
+    --mv-text-secondary: #4A4A5A;
+    --mv-muted: #8A8A9A;
+    --mv-inverse: #FAFAFA;
+    --mv-inverse-muted: #B0B0BE;
+    --mv-border: #E8E8E0;
+    --mv-border-dark: #2A2A45;
+    --mv-focus: #16213E;
+    --mv-success: #2ECC71;
+    --mv-warning: #F39C12;
+    --mv-error: #E74C3C;
+    --mv-info: #3498DB;
+  }
+
+  * {
+    @apply border-mv-border;
+  }
+
+  body {
+    @apply bg-mv-bg text-mv-text;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background-color: var(--mv-accent);
+    color: white;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--mv-focus);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  .container-mv {
+    @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+}

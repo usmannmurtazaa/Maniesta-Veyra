@@ -1,0 +1,726 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  COD
+  BANK_TRANSFER
+  ONLINE
+}
+
+enum PrintLocation {
+  FRONT
+  BACK
+  LEFT_SLEEVE
+  RIGHT_SLEEVE
+}
+
+enum CustomOrderStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  CHANGES_REQUESTED
+  IN_PRODUCTION
+  PRODUCTION_COMPLETE
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum CouponType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  FREE_SHIPPING
+}
+
+// ============================================================
+// USERS & AUTH
+// ============================================================
+
+model User {
+  id            String    @id @default(dbgenerated("gen_random_uuid()::TEXT"))
+  email         String    @unique
+  emailVerified DateTime?
+  passwordHash  String?
+  firstName     String
+  lastName      String
+  phone         String?
+  role          UserRole  @default(CUSTOMER)
+  avatarUrl     String?
+  isActive      Boolean   @default(true)
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  addresses       Address[]
+  cart            Cart?
+  wishlist        Wishlist?
+  orders          Order[]
+  reviews         Review[]
+  customDesigns   CustomDesign[]
+  passwordReset   PasswordResetToken[]
+  couponUsages    CouponUsage[]
+
+  @@index([email])
+  @@map("users")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(dbgenerated("gen_random_uuid()::TEXT"))
+  userId    String
+  tokenHash String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@map("password_reset_tokens")
+}
+
+model Address {
+  id           String   @id @default(dbgenerated("gen_random_uuid()::TEXT"))
+  userId       String
+  label        String?
+  fullName     String
+  phone        String
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  state        String
+  postalCode   String
+  country      String   @default("PK")
+  isDefault    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("addresses")
+}
+
+// ============================================================
+// CATEGORIES
+// ============================================================
+
+model Category {
+  id              String     @id @default(dbgenerated("gen_random_uuid()::TEXT"))
+  name            String
+  slug            String     @unique
+  description     String?
+  imageUrl        String?
+  parentId        String?
+  sortOrder       Int        @default(0)
+  isActive        Boolean    @default(true)
+  metaTitle       String?
+  metaDescription String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  parent   Category?  @relation("CategoryParent", fields: [parentId], references: [id], onDelete: SetNull)
+  children Category[] @relation("CategoryParent")
+  products Product[]
+
+  @@index([slug])
+  @@index([parentId, isActive])
+  @@map("categories")
+}
+
+// ============================================================
+// PRODUCTS & VARIANTS
+// ============================================================
+
+model Product {
+  id               String    @id @default(dbgenerated("gen_random_uuid()::TEXT"))
+  name             String
+  slug             String    @unique
+  description      String
+  categoryId       String
+  basePrice        Decimal   @db.Decimal(10, 2)
+  compareAtPrice   Decimal?  @db.Decimal(10, 2)
+  isActive         Boolean   @default(true)
+  isFeatured       Boolean   @default(false)
+  isNewArrival     Boolean   @default(false)
+  isBestSeller     Boolean   @default(false)
+  tags             String[]
+  material         String?
+  careInstructions String?
+  skuPrefix        String
+  ratingAvg        Decimal   @default(0) @db.Decimal(3, 2)
+  ratingCount      Int       @default(0)
+  metaTitle        String?
+  metaDescription  String?
+  deletedAt        DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  category      Category         @relation(fields: [categoryId], references: [id])
+  colors        ProductColor[]
+  sizes         ProductSize[]
+  variants      ProductVariant[]
+  images        ProductImage[]
+  reviews       Review[]
+  wishlistItems WishlistItem[]
+
+  @@index([categoryId, isActive, deletedAt])
+  @@index([slug])
+  @@index([isActive, isFeatured])
+  @@map("products")
+}
+
+model ProductColor {
+  id        String   @id @default(dbgenerated("gen_random_uuid()::TEXT"))
+  productId String
+  name      String
+  hexCode   String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  product  Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variants ProductVariant[]
+
+  @@index([productId])
+  @@map("product_colors")
+}
+
+model ProductSize {
+  id        String   @id @default(dbgenerated("gen_random_uuid()::TEXT"))
+  productId String
+  label     String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  product  Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variants ProductVariant[]
+
+  @@index([productId])
+  @@map("product_sizes")
+}
+
+model ProductVariant {
+  id                String    @id @default(dbgenerated("gen_random_uuid()::TEXT"))
+  productId         String
+  colorId           String
+  sizeId            String
+  sku               String    @unique
+  price             Decimal?  @db.Decimal(10, 2)
+  stock             Int       @default(0)
+  lowStockThreshold Int       @default(5)
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  product    Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  color      ProductColor @relation(fields: [colorId], references: [id], onDelete: Cascade)
+  size       ProductSize  @relation(fields: [sizeId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
+  cartItems  CartItem[]
+
+  @@unique([productId, colorId, sizeId])
+  @@index([productId, isActive])
+  @@index([sku])
+  @@map("product_variants")
+}
+
+model ProductImage {
+  id        String   @id @default(dbgenerated("gen_random_uuid()::TEXT"))
+  productId String
+  url       String
+  altText   String?
+  sortOrder Int      @default(0)
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, isPrimary])
+  @@map("product_images")
+}
+
+// ============================================================
+// GARMENTS (Custom Print Studio)
+// ============================================================
+
+model Garment {
+  id                     String          @id @default(dbgenerated("gen_random_uuid()::TEXT"))
+  name                   String
+  slug                   String          @unique
+  description            String?
+  basePrice              Decimal         @db.Decimal(10, 2)
+  skuPrefix              String
+  isActive               Boolean         @default(true)
+  supportedPrintLocations PrintLocation[]
+  printableAreaWidth     Decimal?        @db.Decimal(5, 2)
+  printableAreaHeight    Decimal?        @db.Decimal(5, 2)
+  sortOrder              Int             @default(0)
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+
+  colors        GarmentColor[]
+  sizes         GarmentSize[]
+  variants      GarmentVariant[]
+  printPricings PrintPricing[]
+  customDesigns CustomDesign[]
+
+  @@index([slug])
+  @@index([isActive, sortOrder])
+  @@map("garments")
+}
+
+model GarmentColor {
+  id        String   @id @default(dbgenerated("gen_random_uuid()::TEXT"))
+  garmentId String
+  name      String
+  hexCode   String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  garment       Garment          @relation(fields: [garmentId], references: [id], onDelete: Cascade)
+  variants      GarmentVariant[]
+  customDesigns CustomDesign[]
+
+  @@index([garmentId])
+  @@map("garment_colors")
+}
+
+model GarmentSize {
+  id        String   @id @default(dbgenerated("gen_random_uuid()::TEXT"))
+  garmentId String
+  label     String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  garment       Garment          @relation(fields: [garmentId], references: [id], onDelete: Cascade)
+  variants      GarmentVariant[]
+  customDesigns CustomDesign[]
+
+  @@index([garmentId])
+  @@map("garment_sizes")
+}
+
+model GarmentVariant {
+  id                String   @id @default(dbgenerated("gen_random_uuid()::TEXT"))
+  garmentId         String
+  colorId           String
+  sizeId            String
+  sku               String   @unique
+  stock             Int      @default(0)
+  lowStockThreshold Int      @default(5)
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  garment Garment      @relation(fields: [garmentId], references: [id], onDelete: Cascade)
+  color   GarmentColor @relation(fields: [colorId], references: [id], onDelete: Cascade)
+  size    GarmentSize  @relation(fields: [sizeId], references: [id], onDelete: Cascade)
+
+  @@unique([garmentId, colorId, sizeId])
+  @@index([garmentId, isActive])
+  @@index([sku])
+  @@map("garment_variants")
+}
+
+// ============================================================
+// CUSTOM PRINT PRICING
+// ============================================================
+
+model PrintPricing {
+  id                      String   @id @default(dbgenerated("gen_random_uuid()::TEXT"))
+  garmentId               String
+  location                PrintLocation
+  baseCost                Decimal  @default(0) @db.Decimal(10, 2)
+  largePrintThresholdSqIn Decimal? @db.Decimal(8, 2)
+  largePrintSurcharge     Decimal  @default(0) @db.Decimal(10, 2)
+  quantityDiscountTiers   Json     @default("[]")
+  isActive                Boolean  @default(true)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  garment Garment @relation(fields: [garmentId], references: [id], onDelete: Cascade)
+
+  @@unique([garmentId, location])
+  @@map("print_pricing")
+}
+
+// ============================================================
+// CUSTOM DESIGNS
+// ============================================================
+
+model CustomDesign {
+  id              String             @id @default(dbgenerated("gen_random_uuid()::TEXT"))
+  userId          String?
+  garmentId       String
+  garmentColorId  String
+  garmentSizeId   String
+  printLocations  PrintLocation[]
+  quantity        Int                @default(1)
+  unitPrice       Decimal            @db.Decimal(10, 2)
+  totalPrice      Decimal            @db.Decimal(10, 2)
+  notes           String?
+  previewImageUrl String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  user       User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
+  garment    Garment              @relation(fields: [garmentId], references: [id])
+  color      GarmentColor         @relation(fields: [garmentColorId], references: [id])
+  size       GarmentSize          @relation(fields: [garmentSizeId], references: [id])
+  assets     CustomDesignAsset[]
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  @@index([userId])
+  @@index([garmentId])
+  @@map("custom_designs")
+}
+
+model CustomDesignAsset {
+  id             String        @id @default(dbgenerated("gen_random_uuid()::TEXT"))
+  customDesignId String
+  printLocation  PrintLocation
+  imageUrl       String
+  fileName       String
+  fileSize       Int
+  mimeType       String
+  imageWidth     Int?
+  imageHeight    Int?
+  positionX      Float         @default(50)
+  positionY      Float         @default(50)
+  scale          Float         @default(0.5)
+  rotation       Float         @default(0)
+  sortOrder      Int           @default(0)
+  createdAt      DateTime      @default(now())
+
+  customDesign CustomDesign @relation(fields: [customDesignId], references: [id], onDelete: Cascade)
+
+  @@unique([customDesignId, printLocation])
+  @@index([customDesignId])
+  @@map("custom_design_assets")
+}
+
+// ============================================================
+// CART
+// ============================================================
+
+model Cart {
+  id             String     @id @default(dbgenerated("gen_random_uuid()::TEXT"))
+  userId         String?    @unique
+  guestSessionId String?    @unique
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  user  User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  id               String    @id @default(dbgenerated("gen_random_uuid()::TEXT"))
+  cartId           String
+  productVariantId String?
+  customDesignId   String?
+  quantity         Int       @default(1)
+  isSavedForLater  Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  cart           Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productVariant ProductVariant? @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+  customDesign   CustomDesign?  @relation(fields: [customDesignId], references: [id], onDelete: Cascade)
+
+  @@unique([cartId, productVariantId, customDesignId])
+  @@index([cartId])
+  @@map("cart_items")
+}
+
+// ============================================================
+// ORDERS
+// ============================================================
+
+model Order {
+  id                      String        @id @default(dbgenerated("gen_random_uuid()::TEXT"))
+  orderNumber             String        @unique
+  userId                  String?
+  status                  OrderStatus   @default(PENDING)
+  subtotal                Decimal       @db.Decimal(10, 2)
+  discountAmount          Decimal       @default(0) @db.Decimal(10, 2)
+  shippingCost            Decimal       @default(0) @db.Decimal(10, 2)
+  taxAmount               Decimal       @default(0) @db.Decimal(10, 2)
+  total                   Decimal       @db.Decimal(10, 2)
+  currency                String        @default("PKR")
+  couponId                String?
+  customerEmail           String
+  customerPhone           String
+  shippingAddressSnapshot Json
+  billingAddressSnapshot  Json?
+  paymentMethod           PaymentMethod
+  paymentStatus           PaymentStatus @default(PENDING)
+  notes                   String?
+  idempotencyKey          String?       @unique
+  estimatedDeliveryDate   DateTime?
+  shippedAt               DateTime?
+  deliveredAt             DateTime?
+  cancelledAt             DateTime?
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
+
+  user          User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  coupon        Coupon?            @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  items         OrderItem[]
+  payments      Payment[]
+  statusHistory OrderStatusHistory[]
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([status, createdAt(sort: Desc)])
+  @@index([orderNumber])
+  @@map("orders")
+}
+
+model OrderItem {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()::TEXT"))
+  orderId            String
+  productVariantId   String?
+  customDesignId     String?
+  productName        String
+  productSlug        String?
+  variantSku         String?
+  colorName          String?
+  sizeLabel          String?
+  unitPrice          Decimal   @db.Decimal(10, 2)
+  quantity           Int       @default(1)
+  totalPrice         Decimal   @db.Decimal(10, 2)
+  isCustomDesign     Boolean   @default(false)
+  customDesignSnapshot Json?
+  createdAt          DateTime  @default(now())
+
+  order               Order                @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productVariant      ProductVariant?      @relation(fields: [productVariantId], references: [id], onDelete: SetNull)
+  customDesign        CustomDesign?        @relation(fields: [customDesignId], references: [id], onDelete: Restrict)
+  customOrderTracking CustomOrderTracking?
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+model OrderStatusHistory {
+  id        String      @id @default(dbgenerated("gen_random_uuid()::TEXT"))
+  orderId   String
+  status    OrderStatus
+  notes     String?
+  createdAt DateTime    @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, createdAt(sort: Desc)])
+  @@map("order_status_history")
+}
+
+model CustomOrderTracking {
+  id              String            @id @default(dbgenerated("gen_random_uuid()::TEXT"))
+  orderItemId     String            @unique
+  status          CustomOrderStatus @default(PENDING_REVIEW)
+  adminNotes      String?
+  customerNotes   String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  orderItem     OrderItem                    @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  statusHistory CustomOrderStatusHistory[]
+
+  @@map("custom_order_tracking")
+}
+
+model CustomOrderStatusHistory {
+  id         String            @id @default(dbgenerated("gen_random_uuid()::TEXT"))
+  trackingId String
+  status     CustomOrderStatus
+  notes      String?
+  createdBy  String?
+  createdAt  DateTime          @default(now())
+
+  tracking CustomOrderTracking @relation(fields: [trackingId], references: [id], onDelete: Cascade)
+
+  @@index([trackingId, createdAt(sort: Desc)])
+  @@map("custom_order_status_history")
+}
+
+// ============================================================
+// PAYMENTS
+// ============================================================
+
+model Payment {
+  id               String        @id @default(dbgenerated("gen_random_uuid()::TEXT"))
+  orderId          String
+  amount           Decimal       @db.Decimal(10, 2)
+  currency         String        @default("PKR")
+  method           PaymentMethod
+  status           PaymentStatus @default(PENDING)
+  transactionId    String?
+  providerResponse Json?
+  paidAt           DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([transactionId])
+  @@map("payments")
+}
+
+// ============================================================
+// WISHLIST
+// ============================================================
+
+model Wishlist {
+  id        String   @id @default(dbgenerated("gen_random_uuid()::TEXT"))
+  userId    String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items WishlistItem[]
+
+  @@map("wishlists")
+}
+
+model WishlistItem {
+  id         String   @id @default(dbgenerated("gen_random_uuid()::TEXT"))
+  wishlistId String
+  productId  String
+  createdAt  DateTime @default(now())
+
+  wishlist Wishlist @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([wishlistId, productId])
+  @@index([wishlistId])
+  @@map("wishlist_items")
+}
+
+// ============================================================
+// REVIEWS
+// ============================================================
+
+model Review {
+  id                String       @id @default(dbgenerated("gen_random_uuid()::TEXT"))
+  productId         String
+  userId            String
+  orderItemId       String?
+  rating            Int
+  title             String?
+  content           String?
+  status            ReviewStatus @default(PENDING)
+  isVerifiedPurchase Boolean     @default(false)
+  helpfulCount      Int          @default(0)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, userId])
+  @@index([productId, status])
+  @@map("reviews")
+}
+
+// ============================================================
+// COUPONS
+// ============================================================
+
+model Coupon {
+  id                String      @id @default(dbgenerated("gen_random_uuid()::TEXT"))
+  code              String      @unique
+  type              CouponType
+  value             Decimal     @db.Decimal(10, 2)
+  minOrderAmount    Decimal?    @db.Decimal(10, 2)
+  maxDiscountAmount Decimal?    @db.Decimal(10, 2)
+  startsAt          DateTime?
+  expiresAt         DateTime?
+  usageLimit        Int?
+  perUserLimit      Int?
+  usageCount        Int         @default(0)
+  isActive          Boolean     @default(true)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  orders      Order[]
+  couponUsages CouponUsage[]
+
+  @@index([code])
+  @@map("coupons")
+}
+
+model CouponUsage {
+  id        String   @id @default(dbgenerated("gen_random_uuid()::TEXT"))
+  couponId  String
+  userId    String
+  orderId   String?
+  usedAt    DateTime @default(now())
+
+  coupon Coupon @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([couponId, userId, orderId])
+  @@index([couponId])
+  @@index([userId])
+  @@map("coupon_usages")
+}
+
+// ============================================================
+// SETTINGS
+// ============================================================
+
+model StoreSettings {
+  id          String   @id @default(dbgenerated("gen_random_uuid()::TEXT"))
+  key         String   @unique
+  value       Json
+  description String?
+  updatedAt   DateTime @updatedAt
+
+  @@map("store_settings")
+}
