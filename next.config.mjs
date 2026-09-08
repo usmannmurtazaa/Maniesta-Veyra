@@ -1,5 +1,5 @@
 import { withSentryConfig } from '@sentry/nextjs';
-import withSerwist from '@serwist/next';
+import withSerwistInit from '@serwist/next';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -28,19 +28,15 @@ const nextConfig = {
   },
 };
 
-const serwistConfig = {
+// Initialize Serwist wrapper with its own config
+const withSerwist = withSerwistInit({
   swSrc: 'src/sw.ts',
   swDest: 'public/sw.js',
   disable: process.env.NODE_ENV === 'development',
-  register: true,
-  scope: '/',
-  importScripts: [],
-  runtimeCaching: [],
-};
+});
 
-const configWithSerwist = withSerwist(nextConfig, serwistConfig);
-
-export default withSentryConfig(configWithSerwist, {
+// Apply Serwist first, then Sentry
+export default withSentryConfig(withSerwist(nextConfig), {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   authToken: process.env.SENTRY_AUTH_TOKEN,
