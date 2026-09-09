@@ -3,7 +3,7 @@ import { productService } from '@/lib/services/product-service';
 import { categoryService } from '@/lib/services/category-service';
 import { productQuerySchema } from '@/lib/validation/product.schema';
 import { ProductCardClient } from '@/components/product/product-card-client';
-import { Container, Section } from '@/components/layout';
+import { Container } from '@/components/layout';
 import { Pagination } from '@/components/ui/pagination';
 import { ShopFilters } from '@/components/filters/shop-filters';
 import { ProductGridSkeleton } from '@/components/shared/loading-skeleton';
@@ -21,7 +21,9 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
   const parsed = productQuerySchema.parse(searchParams);
   const [productsResult, categories] = await Promise.all([
     productService.getProducts(parsed),
-    categoryService.getCategories({}),
+    categoryService.getCategories({
+      includeInactive: false
+    }),
   ]);
 
   const { data: products, pagination } = productsResult;
