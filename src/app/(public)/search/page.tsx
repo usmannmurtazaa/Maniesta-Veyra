@@ -5,11 +5,12 @@ import { Container } from '@/components/layout';
 import { Pagination } from '@/components/ui/pagination';
 
 interface SearchPageProps {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
-  const q = typeof searchParams.q === 'string' ? searchParams.q : '';
+  const params = await searchParams;
+  const q = typeof params.q === 'string' ? params.q : '';
 
   if (!q) {
     return (
@@ -22,8 +23,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   const query = searchQuerySchema.parse({
     q,
-    page: searchParams.page,
-    limit: searchParams.limit,
+    page: params.page,
+    limit: params.limit,
   });
 
   const result = await searchService.search(query);
