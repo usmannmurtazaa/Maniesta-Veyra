@@ -1,5 +1,6 @@
-import { withSentryConfig } from '@sentry/nextjs';
+import { withSentryConfig } from '@sentry/nextjs/config';
 import withSerwistInit from '@serwist/next';
+import path from 'path';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -9,6 +10,11 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: '*.blob.vercel-storage.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
         pathname: '/**',
       },
     ],
@@ -26,14 +32,11 @@ const nextConfig = {
       },
     ];
   },
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      // Prevent Konva from trying to load the node-only 'canvas' module in client bundle
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        canvas: false,
-      };
-    }
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      canvas: path.resolve(process.cwd(), 'src/lib/canvas-stub.ts'),
+    };
     return config;
   },
 };

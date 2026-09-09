@@ -1,5 +1,5 @@
 import { fileTypeFromBuffer } from 'file-type';
-import { sizeOf } from 'image-size';
+import sharp from 'sharp';
 import DOMPurify from 'isomorphic-dompurify';
 
 const ALLOWED_MIME_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml']);
@@ -38,18 +38,19 @@ export async function validateUpload(file: File): Promise<{ valid: boolean; erro
     return { valid: true };
   } else {
     try {
-      const dims = sizeOf(buffer);
+      const metadata = await sharp(buffer).metadata();
+      const width = metadata.width ?? 0;
+      const height = metadata.height ?? 0;
       if (
-        !dims.width || !dims.height ||
-        dims.width < MIN_DIMENSION || dims.height < MIN_DIMENSION ||
-        dims.width > MAX_DIMENSION || dims.height > MAX_DIMENSION
+        width < MIN_DIMENSION || height < MIN_DIMENSION ||
+        width > MAX_DIMENSION || height > MAX_DIMENSION
       ) {
         return {
           valid: false,
           error: `Image dimensions must be between ${MIN_DIMENSION}x${MIN_DIMENSION} and ${MAX_DIMENSION}x${MAX_DIMENSION}`,
         };
       }
-      return { valid: true, dimensions: { width: dims.width, height: dims.height } };
+      return { valid: true, dimensions: { width, height } };
     } catch {
       return { valid: false, error: 'Unable to read image dimensions' };
     }

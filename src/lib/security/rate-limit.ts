@@ -5,8 +5,6 @@ import { getServerEnv } from '@/lib/env';
 function createRedisClient() {
   const env = getServerEnv();
   if (!env.UPSTASH_REDIS_URL || !env.UPSTASH_REDIS_TOKEN) {
-    // Return a mock or throw? For development, we can create a dummy limiter that always allows.
-    // Better: throw error if missing, but for now return null and handle in limiter.
     return null;
   }
   return new Redis({
@@ -19,10 +17,7 @@ const redis = createRedisClient();
 
 function createLimiter(prefix: string, limit: number, duration: `${number} s` | `${number} m` | `${number} h`) {
   if (!redis) {
-    // Dummy limiter that always allows
-    return {
-      limit: async () => ({ success: true }),
-    };
+    return { limit: async () => ({ success: true }) };
   }
   return new Ratelimit({
     redis,
@@ -39,4 +34,5 @@ export const rateLimiters = {
   couponValidate: createLimiter('rl:coupon', 10, '1m'),
   reviewSubmit: createLimiter('rl:review', 3, '10m'),
   orderCreate: createLimiter('rl:order', 5, '1m'),
+  contact: createLimiter('rl:contact', 3, '10m'), // new
 };
