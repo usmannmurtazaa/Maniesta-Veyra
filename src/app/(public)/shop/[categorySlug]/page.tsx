@@ -22,7 +22,10 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
 
   const [productsResult, categories] = await Promise.all([
     productService.getProducts(query),
-    categoryService.getCategories({}),
+    categoryService.getCategories({
+      includeInactive: false,
+      parent: undefined,
+    }),
   ]);
 
   const { data: products, pagination } = productsResult;
