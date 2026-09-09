@@ -14,16 +14,16 @@ export const metadata = {
 };
 
 interface ShopPageProps {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 export default async function ShopPage({ searchParams }: ShopPageProps) {
-  const parsed = productQuerySchema.parse(searchParams);
+  const rawSearchParams = await searchParams;
+  const parsed = productQuerySchema.parse(rawSearchParams);
+
   const [productsResult, categories] = await Promise.all([
     productService.getProducts(parsed),
-    categoryService.getCategories({
-      includeInactive: false
-    }),
+    categoryService.getCategories({}),
   ]);
 
   const { data: products, pagination } = productsResult;
@@ -31,14 +31,11 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
   return (
     <Container className="py-8">
       <div className="flex flex-col lg:flex-row gap-8">
-        {/* Sidebar filters (desktop) */}
         <aside className="hidden lg:block w-64 shrink-0">
           <ShopFilters categories={categories} />
         </aside>
 
-        {/* Product grid */}
         <div className="flex-1">
-          {/* Mobile filter button - we'll add later */}
           <div className="mb-4 flex items-center justify-between">
             <h1 className="font-display text-2xl font-bold">Shop</h1>
             <span className="text-sm text-mv-muted">{pagination.total} products</span>
@@ -47,16 +44,16 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
           <Suspense fallback={<ProductGridSkeleton />}>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {products.map((product) => (
-  <ProductCardClient
-    key={product.id}
-    id={product.id}
-    slug={product.slug}
-    name={product.name}
-    price={Number(product.basePrice)}
-    compareAtPrice={product.compareAtPrice ? Number(product.compareAtPrice) : undefined}
-    imageUrl={product.images[0]?.url}
-  />
-))}
+                <ProductCardClient
+                  key={product.id}
+                  id={product.id}
+                  slug={product.slug}
+                  name={product.name}
+                  price={Number(product.basePrice)}
+                  compareAtPrice={product.compareAtPrice ? Number(product.compareAtPrice) : undefined}
+                  imageUrl={product.images[0]?.url}
+                />
+              ))}
             </div>
           </Suspense>
 
