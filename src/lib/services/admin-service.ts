@@ -1,6 +1,7 @@
-import { Prisma, OrderStatus, CustomOrderStatus, ReviewStatus, PaymentStatus, UserRole, CouponType } from '@prisma/client';
+import { Prisma, OrderStatus, CustomOrderStatus, ReviewStatus, UserRole, CouponType } from '@prisma/client';
 import { prisma } from '@/lib/db/prisma';
-import { getServerEnv } from '@/lib/env';
+
+const LOW_STOCK_THRESHOLD = 5; // default threshold
 
 export class AdminService {
   // ---------- DASHBOARD ----------
@@ -19,7 +20,7 @@ export class AdminService {
       prisma.order.count({ where: { status: OrderStatus.PENDING } }),
       prisma.user.count({ where: { role: UserRole.CUSTOMER } }),
       prisma.product.count({ where: { isActive: true, deletedAt: null } }),
-      prisma.productVariant.count({ where: { stock: { lte: prisma.productVariant.fields.lowStockThreshold } } }),
+      prisma.productVariant.count({ where: { stock: { lte: LOW_STOCK_THRESHOLD } } }),
       prisma.customOrderTracking.count({ where: { status: CustomOrderStatus.PENDING_REVIEW } }),
     ]);
 
@@ -85,7 +86,6 @@ export class AdminService {
   }
 
   async createProduct(input: any) {
-    // Input shape: { name, slug, description, categoryId, basePrice, compareAtPrice?, skuPrefix, tags, material?, careInstructions?, colors: [{name, hexCode}], sizes: [{label}], images: [{url, altText, isPrimary}] }
     return prisma.product.create({
       data: {
         name: input.name,
@@ -107,7 +107,6 @@ export class AdminService {
   }
 
   async updateProduct(id: string, input: any) {
-    // Update basic fields; colors/sizes/images/variants managed separately.
     return prisma.product.update({
       where: { id },
       data: {
@@ -141,7 +140,7 @@ export class AdminService {
         sku: variant.sku,
         price: variant.price ? new Prisma.Decimal(variant.price) : null,
         stock: variant.stock,
-        lowStockThreshold: variant.lowStockThreshold || 5,
+        lowStockThreshold: variant.lowStockThreshold || LOW_STOCK_THRESHOLD,
         isActive: true,
       },
     });
@@ -181,7 +180,7 @@ export class AdminService {
 
   // ---------- INVENTORY ----------
   async listInventory(page: number, limit: number, lowStockOnly: boolean) {
-    const where = lowStockOnly ? { stock: { lte: prisma.productVariant.fields.lowStockThreshold } } : {};
+    const where = lowStockOnly ? { stock: { lte: LOW_STOCK_THRESHOLD } } : {};
     const [total, variants] = await Promise.all([
       prisma.productVariant.count({ where }),
       prisma.productVariant.findMany({
@@ -227,7 +226,13 @@ export class AdminService {
       where: { id },
       include: {
         user: true,
-        items: { include: { productVariant: { include: { product: true, color: true, size: true } }, customDesign: { include: { garment: true, color: true, size: true, assets: true } }, customOrderTracking: true } },
+        items: {
+          include: {
+            productVariant: { include: { product: true, color: true, size: true } },
+            customDesign: { include: { garment: true, color: true, size: true, assets: true } },
+            customOrderTracking: true,
+          },
+        },
         payments: true,
         statusHistory: true,
       },
@@ -472,8 +477,7 @@ export class AdminService {
 
   // ---------- SETTINGS ----------
   async getSettings() {
-    const settings = await prisma.storeSettings.findMany();
-    return settings;
+    return prisma.storeSettings.findMany();
   }
 
   async updateSetting(key: string, value: any, description?: string) {
@@ -495,7 +499,6 @@ export class AdminService {
       orderBy: { createdAt: 'asc' },
     });
 
-    // Group by day
     const dailySales: Record<string, number> = {};
     orders.forEach((order) => {
       const day = order.createdAt.toISOString().slice(0, 10);
