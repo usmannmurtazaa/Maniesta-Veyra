@@ -9,11 +9,12 @@ import { BreadcrumbJsonLd } from '@/components/seo/breadcrumb-json-ld';
 import { Suspense } from 'react';
 
 interface ProductPageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
-  const product = await productService.getProductBySlug(params.slug);
+  const { slug } = await params;
+  const product = await productService.getProductBySlug(slug);
   if (!product) notFound();
 
   const breadcrumbItems = [
