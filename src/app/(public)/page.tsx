@@ -1,4 +1,4 @@
-import { Suspense } from 'react';
+import Image from 'next/image';
 import { productService } from '@/lib/services/product-service';
 import { categoryService } from '@/lib/services/category-service';
 import { Container, Section, PageHeader } from '@/components/layout';
@@ -93,7 +93,13 @@ export default async function HomePage() {
                 <Link key={cat.id} href={`/shop/${cat.slug}`} className="group">
                   <div className="aspect-square bg-mv-bg-alt rounded-lg overflow-hidden relative">
                     {cat.imageUrl ? (
-                      <img src={cat.imageUrl} alt={cat.name} className="object-cover w-full h-full group-hover:scale-105 transition-transform" />
+                      <Image
+                        src={cat.imageUrl}
+                        alt={cat.name}
+                        fill
+                        sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
+                        className="object-cover transition-transform group-hover:scale-105"
+                      />
                     ) : (
                       <div className="flex items-center justify-center h-full text-mv-muted">No image</div>
                     )}
