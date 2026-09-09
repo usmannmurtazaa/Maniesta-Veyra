@@ -27,7 +27,7 @@ function getRedisClient(): Redis | null {
 function createLimiter(
   prefix: string,
   limit: number,
-  duration: `${number} s` | `${number} m` | `${number} h`
+  duration: `${number}s` | `${number}m` | `${number}h`
 ) {
   const client = getRedisClient();
   if (!client) {
