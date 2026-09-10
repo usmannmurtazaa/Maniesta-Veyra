@@ -469,12 +469,22 @@ export class AdminService {
   }
 
   async updatePrintPricing(garmentId: string, location: any, pricing: any) {
+    const thresholdValue =
+      pricing.largePrintThresholdSqIn == null
+        ? { set: null }
+        : { set: new Prisma.Decimal(pricing.largePrintThresholdSqIn) };
+
+    const surchargeValue =
+      pricing.largePrintSurcharge == null
+        ? { set: null }
+        : { set: new Prisma.Decimal(pricing.largePrintSurcharge) };
+
     return prisma.printPricing.upsert({
       where: { garmentId_location: { garmentId, location } },
       update: {
         baseCost: new Prisma.Decimal(pricing.baseCost),
-        largePrintThresholdSqIn: pricing.largePrintThresholdSqIn ? new Prisma.Decimal(pricing.largePrintThresholdSqIn) : null,
-        largePrintSurcharge: pricing.largePrintSurcharge ? new Prisma.Decimal(pricing.largePrintSurcharge) : null,
+        largePrintThresholdSqIn: thresholdValue,
+        largePrintSurcharge: surchargeValue,
         quantityDiscountTiers: pricing.quantityDiscountTiers,
         isActive: pricing.isActive,
       },
@@ -482,8 +492,8 @@ export class AdminService {
         garmentId,
         location,
         baseCost: new Prisma.Decimal(pricing.baseCost),
-        largePrintThresholdSqIn: pricing.largePrintThresholdSqIn ? new Prisma.Decimal(pricing.largePrintThresholdSqIn) : null,
-        largePrintSurcharge: pricing.largePrintSurcharge ? new Prisma.Decimal(pricing.largePrintSurcharge) : null,
+        largePrintThresholdSqIn: pricing.largePrintThresholdSqIn == null ? null : new Prisma.Decimal(pricing.largePrintThresholdSqIn),
+        largePrintSurcharge: pricing.largePrintSurcharge == null ? null : new Prisma.Decimal(pricing.largePrintSurcharge),
         quantityDiscountTiers: pricing.quantityDiscountTiers,
         isActive: pricing.isActive,
       },
