@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { Prisma, OrderStatus, CustomOrderStatus, ReviewStatus, UserRole } from '@prisma/client';
 import { prisma } from '@/lib/db/prisma';
 
