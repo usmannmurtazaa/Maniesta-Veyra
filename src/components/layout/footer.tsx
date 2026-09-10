@@ -1,7 +1,16 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import { publicEnv } from '@/lib/env';
 import { Container } from './container';
 
 export function Footer() {
+  const [year, setYear] = useState<number>(2026);
+
+  useEffect(() => {
+    setYear(new Date().getFullYear());
+  }, []);
+
   return (
     <footer className="border-t border-mv-border bg-mv-bg-alt py-12 mt-auto">
       <Container>
@@ -10,11 +19,13 @@ export function Footer() {
             <p className="font-display text-xl font-bold text-mv-text">
               {publicEnv.NEXT_PUBLIC_APP_NAME}
             </p>
-            <p className="text-sm text-mv-muted mt-1">{publicEnv.NEXT_PUBLIC_APP_TAGLINE}</p>
+            <p className="text-sm text-mv-muted mt-1">
+              {publicEnv.NEXT_PUBLIC_APP_TAGLINE}
+            </p>
           </div>
           <div className="text-sm text-mv-muted">
             <p>
-              Designed & Developed by{' '}
+              Designed &amp; Developed by{' '}
               <a
                 href={publicEnv.NEXT_PUBLIC_PORTFOLIO_URL}
                 target="_blank"
@@ -24,7 +35,9 @@ export function Footer() {
                 Usman Murtaza
               </a>
             </p>
-            <p className="mt-1">© {new Date().getFullYear()} {publicEnv.NEXT_PUBLIC_APP_NAME}. All rights reserved.</p>
+            <p className="mt-1">
+              © {year} {publicEnv.NEXT_PUBLIC_APP_NAME}. All rights reserved.
+            </p>
           </div>
         </div>
       </Container>

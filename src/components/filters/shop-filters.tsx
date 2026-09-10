@@ -51,7 +51,6 @@ export function ShopFilters({ categories }: ShopFiltersProps) {
             <SelectValue placeholder="All categories" />
           </SelectTrigger>
           <SelectContent>
-            {/* ✅ Use "all" instead of empty string */}
             <SelectItem value="all">All categories</SelectItem>
             {categories.map((cat) => (
               <SelectItem key={cat.id} value={cat.slug}>
