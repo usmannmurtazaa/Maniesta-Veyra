@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Playfair_Display, Inter } from 'next/font/google';
 import Script from 'next/script';
 import './globals.css';
@@ -9,16 +9,20 @@ import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 import { OrganizationJsonLd } from '@/components/seo/organization-json-ld';
 
-const playfair = Playfair_Display({
-  subsets: ['latin'],
-  variable: '--font-display',
-  display: 'swap',
-});
-
+// Body font — critical path, keep preload enabled
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-sans',
   display: 'swap',
+});
+
+// Display font — used only in headings; disable preload to avoid
+// "preloaded but not used" warnings on pages with no large headings.
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  variable: '--font-display',
+  display: 'swap',
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -49,9 +53,28 @@ export const metadata: Metadata = {
     follow: true,
   },
   icons: {
-    icon: '/icons/icon-192.png',
-    apple: '/icons/icon-192.png',
+    icon: [
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [{ url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }],
+    shortcut: '/favicon.ico',
   },
+  formatDetection: {
+    telephone: false,
+    email: false,
+    address: false,
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#1A1A2E',
+  colorScheme: 'light',
+  width: 'device-width',
+  initialScale: 1,
+  // Allow pinch-zoom for accessibility (WCAG 1.4.4)
+  maximumScale: 5,
+  userScalable: true,
 };
 
 export default function RootLayout({
@@ -68,14 +91,16 @@ export default function RootLayout({
           <>
             <Script
               src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
-              strategy="lazyOnload"
+              strategy="afterInteractive"
             />
-            <Script id="google-analytics" strategy="lazyOnload">
+            <Script id="google-analytics" strategy="afterInteractive">
               {`
                 window.dataLayer = window.dataLayer || [];
                 function gtag(){dataLayer.push(arguments);}
                 gtag('js', new Date());
-                gtag('config', '${gaId}');
+                gtag('config', '${gaId}', {
+                  send_page_view: true
+                });
               `}
             </Script>
           </>
@@ -83,9 +108,15 @@ export default function RootLayout({
         <OrganizationJsonLd />
       </head>
       <body className="font-sans bg-mv-bg text-mv-text antialiased">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:rounded-md focus:bg-mv-primary focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-mv-inverse"
+        >
+          Skip to content
+        </a>
         <TooltipProvider delayDuration={200}>
           <Navbar />
-          <main>{children}</main>
+          <main id="main-content">{children}</main>
           <Footer />
           <Toaster />
         </TooltipProvider>

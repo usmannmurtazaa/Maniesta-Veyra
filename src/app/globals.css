@@ -28,14 +28,57 @@
     --mv-info: #3498DB;
   }
 
-  * {
-    @apply border-mv-border;
+  html {
+    height: 100%;
+    scroll-behavior: smooth;
+    /* Prevent layout shift when a scrollbar appears */
+    scrollbar-gutter: stable;
   }
 
   body {
+    min-height: 100%;
     @apply bg-mv-bg text-mv-text;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    /* Inter's alternate digits / stylistic sets — the "editorial" look */
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  /* Form controls must inherit the app font — browsers default to their own */
+  button,
+  input,
+  optgroup,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+
+  /* Remove the default number-input spinner in every browser.
+     We render our own +/- buttons in QuantitySelector. */
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type='number'] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  /* Prevent iOS Safari from zooming when focusing an input < 16px */
+  @supports (-webkit-touch-callout: none) {
+    input,
+    select,
+    textarea {
+      font-size: max(16px, 1em);
+    }
+  }
+
+  /* Default border color — matches shadcn/ui convention */
+  * {
+    @apply border-mv-border;
   }
 
   ::selection {
@@ -48,6 +91,7 @@
     outline-offset: 2px;
   }
 
+  /* Respect user motion preferences */
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -63,5 +107,35 @@
 @layer components {
   .container-mv {
     @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+}
+
+@layer utilities {
+  /* Balance headline line breaks — modern browsers only, graceful fallback */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Hide scrollbar but keep scroll functionality (mobile drawers, tabs) */
+  .scrollbar-hidden {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Truncate to N lines with ellipsis */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 }
