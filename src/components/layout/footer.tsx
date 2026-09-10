@@ -21,7 +21,7 @@ export function Footer() {
                 rel="noopener noreferrer"
                 className="text-mv-text underline-offset-2 hover:underline"
               >
-                Developer Name
+                Usman Murtaza
               </a>
             </p>
             <p className="mt-1">© {new Date().getFullYear()} {publicEnv.NEXT_PUBLIC_APP_NAME}. All rights reserved.</p>
