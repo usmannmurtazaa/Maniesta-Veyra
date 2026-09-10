@@ -1,15 +1,19 @@
 import { requireAdmin } from '@/lib/auth/guards';
 import { adminService } from '@/lib/services/admin-service';
 
+interface AdminCustomersPageProps {
+  searchParams: Promise<{ page?: string; search?: string }>;
+}
+
 export default async function AdminCustomersPage({
   searchParams,
-}: {
-  searchParams: { page?: string; search?: string };
-}) {
+}: AdminCustomersPageProps) {
   await requireAdmin();
-  const page = Number(searchParams.page || 1);
-  const search = searchParams.search;
-  const { data: customers, pagination } = await adminService.listCustomers(page, 20, search);
+  const params = await searchParams;
+  const page = Number(params.page || 1);
+  const search = params.search;
+
+  const { data: customers } = await adminService.listCustomers(page, 20, search);
 
   return (
     <div>
@@ -27,10 +31,14 @@ export default async function AdminCustomersPage({
           <tbody>
             {customers.map((customer) => (
               <tr key={customer.id} className="border-t border-mv-border">
-                <td className="p-3">{customer.firstName} {customer.lastName}</td>
+                <td className="p-3">
+                  {customer.firstName} {customer.lastName}
+                </td>
                 <td className="p-3">{customer.email}</td>
                 <td className="p-3">{customer._count.orders}</td>
-                <td className="p-3">{new Date(customer.createdAt).toLocaleDateString()}</td>
+                <td className="p-3">
+                  {new Date(customer.createdAt).toLocaleDateString()}
+                </td>
               </tr>
             ))}
           </tbody>
