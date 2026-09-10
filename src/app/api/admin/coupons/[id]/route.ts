@@ -16,10 +16,11 @@ const couponUpdateSchema = z.object({
   isActive: z.boolean().default(true),
 });
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+interface RouteContext {
+  params: Promise<{ id: string }>;
+}
+
+export async function PATCH(request: NextRequest, { params }: RouteContext) {
   try {
     await requireAdmin();
     const { id } = await params;
@@ -30,7 +31,13 @@ export async function PATCH(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: error.issues } },
+        {
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid input',
+            details: error.issues,
+          },
+        },
         { status: 400 }
       );
     }
@@ -41,16 +48,13 @@ export async function PATCH(
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(_request: NextRequest, { params }: RouteContext) {
   try {
     await requireAdmin();
     const { id } = await params;
     await adminService.deleteCoupon(id);
     return NextResponse.json({ data: { success: true } });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: { code: 'INTERNAL_ERROR', message: 'Failed to delete coupon' } },
       { status: 500 }

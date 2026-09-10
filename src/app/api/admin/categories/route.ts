@@ -7,8 +7,11 @@ export async function GET() {
     await requireAdmin();
     const categories = await adminService.listCategories();
     return NextResponse.json({ data: categories });
-  } catch (error: any) {
-    return NextResponse.json({ error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch categories' } }, { status: 500 });
+  } catch {
+    return NextResponse.json(
+      { error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch categories' } },
+      { status: 500 }
+    );
   }
 }
 
@@ -18,7 +21,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const category = await adminService.createCategory(body);
     return NextResponse.json({ data: category }, { status: 201 });
-  } catch (error: any) {
-    return NextResponse.json({ error: { code: 'INTERNAL_ERROR', message: 'Failed to create category' } }, { status: 500 });
+  } catch {
+    return NextResponse.json(
+      { error: { code: 'INTERNAL_ERROR', message: 'Failed to create category' } },
+      { status: 500 }
+    );
   }
 }

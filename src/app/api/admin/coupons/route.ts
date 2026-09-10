@@ -21,8 +21,11 @@ export async function GET() {
     await requireAdmin();
     const coupons = await adminService.listCoupons();
     return NextResponse.json({ data: coupons });
-  } catch (error: any) {
-    return NextResponse.json({ error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch coupons' } }, { status: 500 });
+  } catch {
+    return NextResponse.json(
+      { error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch coupons' } },
+      { status: 500 }
+    );
   }
 }
 
@@ -33,7 +36,22 @@ export async function POST(request: NextRequest) {
     const input = couponSchema.parse(body);
     const coupon = await adminService.createCoupon(input);
     return NextResponse.json({ data: coupon }, { status: 201 });
-  } catch (error: any) {
-    return NextResponse.json({ error: { code: 'INTERNAL_ERROR', message: 'Failed to create coupon' } }, { status: 500 });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid input',
+            details: error.issues,
+          },
+        },
+        { status: 400 }
+      );
+    }
+    return NextResponse.json(
+      { error: { code: 'INTERNAL_ERROR', message: 'Failed to create coupon' } },
+      { status: 500 }
+    );
   }
 }

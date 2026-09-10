@@ -10,7 +10,10 @@ export async function GET(request: NextRequest) {
     const search = request.nextUrl.searchParams.get('search') || undefined;
     const result = await adminService.listCustomers(page, limit, search);
     return NextResponse.json(result);
-  } catch (error: any) {
-    return NextResponse.json({ error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch customers' } }, { status: 500 });
+  } catch {
+    return NextResponse.json(
+      { error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch customers' } },
+      { status: 500 }
+    );
   }
 }

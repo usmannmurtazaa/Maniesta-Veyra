@@ -12,33 +12,39 @@ const categoryUpdateSchema = z.object({
   sortOrder: z.number().int().optional(),
 });
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+interface RouteContext {
+  params: Promise<{ id: string }>;
+}
+
+export async function PATCH(request: NextRequest, { params }: RouteContext) {
   try {
     await requireAdmin();
+    const { id } = await params;
     const body = await request.json();
     const input = categoryUpdateSchema.parse(body);
     const category = await prisma.category.update({
-      where: { id: params.id },
+      where: { id },
       data: input,
     });
     return NextResponse.json({ data: category });
-  } catch (error) {
-    return NextResponse.json({ error: { code: 'INTERNAL_ERROR', message: 'Failed to update category' } }, { status: 500 });
+  } catch {
+    return NextResponse.json(
+      { error: { code: 'INTERNAL_ERROR', message: 'Failed to update category' } },
+      { status: 500 }
+    );
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(_request: NextRequest, { params }: RouteContext) {
   try {
     await requireAdmin();
-    await prisma.category.delete({ where: { id: params.id } });
+    const { id } = await params;
+    await prisma.category.delete({ where: { id } });
     return NextResponse.json({ data: { success: true } });
-  } catch (error) {
-    return NextResponse.json({ error: { code: 'INTERNAL_ERROR', message: 'Failed to delete category' } }, { status: 500 });
+  } catch {
+    return NextResponse.json(
+      { error: { code: 'INTERNAL_ERROR', message: 'Failed to delete category' } },
+      { status: 500 }
+    );
   }
 }

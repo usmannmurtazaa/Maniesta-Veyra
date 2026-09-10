@@ -45,7 +45,7 @@ export async function GET() {
     );
 
     return NextResponse.json({ data: enhanced.filter(Boolean) });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch product analytics' } },
       { status: 500 }

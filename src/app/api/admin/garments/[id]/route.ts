@@ -16,17 +16,34 @@ const garmentUpdateSchema = z.object({
   isActive: z.boolean().default(true),
 });
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+interface RouteContext {
+  params: Promise<{ id: string }>;
+}
+
+export async function PATCH(request: NextRequest, { params }: RouteContext) {
   try {
     await requireAdmin();
+    const { id } = await params;
     const body = await request.json();
     const input = garmentUpdateSchema.parse(body);
-    const garment = await adminService.updateGarment(params.id, input);
+    const garment = await adminService.updateGarment(id, input);
     return NextResponse.json({ data: garment });
   } catch (error) {
-    return NextResponse.json({ error: { code: 'INTERNAL_ERROR', message: 'Failed to update garment' } }, { status: 500 });
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid input',
+            details: error.issues,
+          },
+        },
+        { status: 400 }
+      );
+    }
+    return NextResponse.json(
+      { error: { code: 'INTERNAL_ERROR', message: 'Failed to update garment' } },
+      { status: 500 }
+    );
   }
 }

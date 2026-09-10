@@ -11,7 +11,10 @@ export async function GET(request: NextRequest) {
     const status = request.nextUrl.searchParams.get('status') as CustomOrderStatus | undefined;
     const result = await adminService.listCustomOrders(page, limit, status);
     return NextResponse.json(result);
-  } catch (error: any) {
-    return NextResponse.json({ error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch custom orders' } }, { status: 500 });
+  } catch {
+    return NextResponse.json(
+      { error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch custom orders' } },
+      { status: 500 }
+    );
   }
 }
