@@ -1,6 +1,13 @@
 import { defaultCache } from '@serwist/next/worker';
 import type { PrecacheEntry, SerwistGlobalConfig } from 'serwist';
-import { Serwist } from 'serwist';
+import {
+  Serwist,
+  NetworkOnly,
+  NetworkFirst,
+  CacheFirst,
+  ExpirationPlugin,
+  CacheableResponsePlugin,
+} from 'serwist';
 
 declare global {
   interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -16,7 +23,6 @@ const serwist = new Serwist({
   clientsClaim: true,
   navigationPreload: true,
 
-  // Offline fallback for failed navigations
   fallbacks: {
     entries: [
       {
@@ -27,55 +33,48 @@ const serwist = new Serwist({
   },
 
   runtimeCaching: [
-    // ----------------------------------------------------------------
-    // Custom overrides — placed BEFORE defaultCache so they win.
-    // Serwist matches in order and stops at the first match.
-    // ----------------------------------------------------------------
-
-    // 1. Private API routes — never touch the cache
+    // Private API routes — never cache
     {
       matcher: ({ url }) => url.pathname.startsWith('/api/'),
-      handler: 'NetworkOnly',
+      handler: new NetworkOnly(),
     },
 
-    // 2. Private page routes — never cache the document
+    // Private page routes — never cache the document
     {
       matcher: ({ url }) =>
         /^\/(account|checkout|cart|admin|wishlist|auth|customize)(\/|$)/.test(
           url.pathname
         ),
-      handler: 'NetworkOnly',
+      handler: new NetworkOnly(),
     },
 
-    // 3. Product images from Vercel Blob — long-lived cache
+    // Vercel Blob product images — long-lived cache
     {
-      matcher: ({ url }) =>
-        url.hostname.endsWith('.blob.vercel-storage.com'),
-      handler: 'CacheFirst',
-      options: {
+      matcher: ({ url }) => url.hostname.endsWith('.blob.vercel-storage.com'),
+      handler: new CacheFirst({
         cacheName: 'mv-product-images',
-        expiration: {
-          maxEntries: 200,
-          maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
-        },
-        cacheableResponse: { statuses: [0, 200] },
-      },
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 200,
+            maxAgeSeconds: 60 * 60 * 24 * 7,
+          }),
+          new CacheableResponsePlugin({
+            statuses: [0, 200],
+          }),
+        ],
+      }),
     },
 
-    // 4. GA4 — do not block navigation if Google is slow
+    // GA4 — fail fast when offline
     {
       matcher: ({ url }) => url.hostname === 'www.googletagmanager.com',
-      handler: 'NetworkFirst',
-      options: {
+      handler: new NetworkFirst({
         cacheName: 'mv-ga',
         networkTimeoutSeconds: 3,
-      },
+      }),
     },
 
-    // ----------------------------------------------------------------
-    // Default Serwist cache — handles Next.js chunks, fonts, RSC payloads,
-    // and public navigation documents with NetworkFirst + cache fallback.
-    // ----------------------------------------------------------------
+    // Default Serwist rules (documents, Next.js chunks, fonts, RSC)
     ...defaultCache,
   ],
 });
