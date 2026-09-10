@@ -24,13 +24,13 @@ const serwist = new Serwist({
   navigationPreload: true,
 
   fallbacks: {
-    entries: [
-      {
-        url: '/offline',
-        matcher: ({ request }) => request.destination === 'document',
-      },
-    ],
-  },
+  entries: [
+    {
+      url: '/offline.html',
+      matcher: ({ request }) => request.destination === 'document',
+    },
+  ],
+},
 
   runtimeCaching: [
     // Private API routes — never cache

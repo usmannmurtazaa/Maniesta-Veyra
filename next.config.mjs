@@ -1,4 +1,4 @@
-import { withSentryConfig } from '@sentry/nextjs';
+import { withSentryConfig } from '@sentry/nextjs/config';
 import withSerwistInit from '@serwist/next';
 import path from 'node:path';
 
@@ -86,7 +86,7 @@ const nextConfig = {
     ];
   },
 
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, nextRuntime }) => {
     // Belt-and-suspenders: also alias `canvas` in case any dep does
     // require('canvas') at module load time. serverExternalPackages above
     // handles the module resolution; this handles the import path.
@@ -96,6 +96,17 @@ const nextConfig = {
         canvas: path.resolve(process.cwd(), 'src/lib/canvas-stub.ts'),
       };
     }
+
+    // Silence jose's CompressionStream/DecompressionStream warnings in the
+    // Edge runtime. Auth.js does not use JWE compression by default, so the
+    // flagged code path never executes — the warning is informational only.
+    if (nextRuntime === 'edge') {
+      config.ignoreWarnings = [
+        ...(config.ignoreWarnings ?? []),
+        { module: /jose\/dist\/webapi\/lib\/deflate\.js/ },
+      ];
+    }
+
     return config;
   },
 };
@@ -109,9 +120,7 @@ const withSerwist = withSerwistInit({
   disable: isDev,
   register: true,
   reloadOnOnline: true,
-  // ⬇️ CRITICAL: register the offline fallback page so the SW can serve it
-  // when both network and cache fail on a navigation.
-  additionalPrecacheEntries: [{ url: '/offline', revision: null }],
+  additionalPrecacheEntries: [{ url: '/offline.html', revision: null }],
 });
 
 const configWithSerwist = withSerwist(nextConfig);
@@ -143,7 +152,13 @@ if (hasSentryDsn) {
       deleteSourcemapsAfterUpload: true,
     },
 
-    disableLogger: true,
+    // v10: replaces the deprecated `disableLogger`.
+    // Treeshakes Sentry debug logging from the production bundle.
+    webpack: {
+      treeshake: {
+        removeDebugLogging: true,
+      },
+    },
   });
 }
 

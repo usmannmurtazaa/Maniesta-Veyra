@@ -3,7 +3,7 @@
   "version": "2.1.0",
   "private": true,
   "engines": {
-    "node": ">=20.18.0"
+  "node": ">=22.0.0"
   },
   "scripts": {
     "dev": "next dev",
@@ -68,7 +68,7 @@
   },
   "devDependencies": {
     "@lhci/cli": "0.14.0",
-    "@netlify/plugin-nextjs": "5.9.4",
+    "@netlify/plugin-nextjs": "5.15.13",
     "@playwright/test": "1.63.0",
     "@testing-library/jest-dom": "6.6.3",
     "@testing-library/react": "16.1.0",

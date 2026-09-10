@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <meta name="theme-color" content="#1A1A2E" />
+    <title>Offline — Maniesta Veyra</title>
+    <style>
+      :root {
+        --mv-primary: #1a1a2e;
+        --mv-accent: #c0392b;
+        --mv-bg: #fafafa;
+        --mv-text: #1a1a2e;
+        --mv-muted: #8a8a9a;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        background: var(--mv-bg);
+        color: var(--mv-text);
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      .wrap {
+        min-height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 32px;
+      }
+      .icon {
+        width: 64px;
+        height: 64px;
+        color: var(--mv-muted);
+        margin-bottom: 24px;
+      }
+      h1 {
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(28px, 5vw, 40px);
+        font-weight: 700;
+        margin: 0 0 12px;
+      }
+      p {
+        max-width: 420px;
+        line-height: 1.6;
+        color: #4a4a5a;
+        margin: 0 0 28px;
+      }
+      a.btn {
+        display: inline-block;
+        padding: 12px 28px;
+        background: var(--mv-accent);
+        color: #fff;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 15px;
+        transition: background 150ms ease-out;
+      }
+      a.btn:hover { background: #a93226; }
+      .brand {
+        margin-top: 48px;
+        font-family: Georgia, "Times New Roman", serif;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        color: var(--mv-primary);
+        font-size: 15px;
+      }
+      .tagline {
+        margin-top: 4px;
+        font-size: 12px;
+        color: var(--mv-muted);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="1" y1="1" x2="23" y2="23"></line>
+        <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
+        <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
+        <path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path>
+        <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
+        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+        <line x1="12" y1="20" x2="12.01" y2="20"></line>
+      </svg>
+      <h1>You&rsquo;re offline</h1>
+      <p>Check your internet connection and try again. Your cart and account are safe.</p>
+      <a class="btn" href="/">Try again</a>
+      <div class="brand">Maniesta Veyra</div>
+      <div class="tagline">Wear Your Identity.</div>
+    </main>
+  </body>
+</html>
