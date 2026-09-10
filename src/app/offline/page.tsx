@@ -1,72 +1,23 @@
-import type { PrecacheEntry, SerwistGlobalConfig } from 'serwist';
-import { Serwist, NetworkFirst, CacheFirst, NetworkOnly } from 'serwist';
+import type { Metadata } from 'next';
+import { Container } from '@/components/layout';
 
-declare global {
-  interface WorkerGlobalScope extends SerwistGlobalConfig {
-    __SW_MANIFEST: (PrecacheEntry | string)[] | undefined;
-  }
-}
-
-declare const self: ServiceWorkerGlobalScope;
-
-const serwist = new Serwist({
-  precacheEntries: self.__SW_MANIFEST,
-  skipWaiting: true,
-  clientsClaim: true,
-  navigationPreload: true,
-  runtimeCaching: [
-    // ✅ HTML pages — network first, cache fallback, 3s timeout
-    {
-      matcher: ({ request }) => request.destination === 'document',
-      handler: new NetworkFirst({
-        cacheName: 'pages',
-        networkTimeoutSeconds: 3,
-      }),
-    },
-    // ✅ Static assets — cache first
-    {
-      matcher: ({ request }) =>
-        request.destination === 'image' ||
-        request.destination === 'font' ||
-        request.destination === 'style' ||
-        request.destination === 'script',
-      handler: new CacheFirst({
-        cacheName: 'static-assets',
-        plugins: [],
-      }),
-    },
-    // ✅ Public API — network only with cache fallback
-    {
-      matcher: ({ url }) => url.pathname.startsWith('/api/products'),
-      handler: new NetworkFirst({
-        cacheName: 'public-api',
-        networkTimeoutSeconds: 3,
-      }),
-    },
-    // ✅ NEVER cache private routes
-    {
-      matcher: ({ url }) =>
-        url.pathname.startsWith('/api/') ||
-        url.pathname.startsWith('/account') ||
-        url.pathname.startsWith('/checkout') ||
-        url.pathname.startsWith('/cart') ||
-        url.pathname.startsWith('/admin') ||
-        url.pathname.startsWith('/auth') ||
-        url.pathname.startsWith('/customize') ||
-        url.pathname.startsWith('/wishlist'),
-      handler: new NetworkOnly(),
-    },
-  ],
-  fallbacks: {
-    entries: [
-      {
-        url: '/offline',
-        matcher({ request }) {
-          return request.destination === 'document';
-        },
-      },
-    ],
+export const metadata: Metadata = {
+  title: 'Offline',
+  robots: {
+    index: false,
+    follow: false,
   },
-});
+};
 
-serwist.addEventListeners();
+export default function OfflinePage() {
+  return (
+    <Container className="py-32 text-center">
+      <h1 className="font-display text-4xl font-bold text-mv-text">
+        You&apos;re Offline
+      </h1>
+      <p className="mt-4 text-mv-text-secondary">
+        Please check your internet connection and try again.
+      </p>
+    </Container>
+  );
+}
