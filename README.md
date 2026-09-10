@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<img src="/public/icons/icon-512.png" alt="Maniesta Veyra Logo" width="120" height="120" style="border-radius: 20px;">
+<img src="./public/icons/icon-512.png" alt="Maniesta Veyra Logo" width="120" height="120" style="border-radius: 20px;">
 
 ## **Wear Your Identity.**
 
@@ -12,7 +12,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Prisma](https://img.shields.io/badge/Prisma-6-2D3748?logo=prisma&logoColor=white)](https://www.prisma.io/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-Proprietary-red.svg)](#license)
 
 </div>
 
@@ -20,34 +20,34 @@
 
 ## 🌟 Overview
 
-Maniesta Veyra is a full‑featured, production‑ready fashion e‑commerce platform built with modern web technologies. It seamlessly combines a **ready‑made clothing store** with a powerful **Custom Print Studio**, allowing customers to upload their own designs, preview them in real time, and order personalised garments.
+Maniesta Veyra is a production-ready fashion e-commerce platform that combines a **ready-made clothing store** with a **Custom Print Studio**. Customers can browse premium apparel, upload their own designs, preview them on garments in real time, and order personalised products.
 
 ---
 
 ## ✨ Key Features
 
-### 🛍️ Ready‑Made Store
+### 🛍️ Ready-Made Store
 - Browse by category, collection, and search
 - Advanced filtering (price, size, color, rating, availability)
-- Product details with gallery, zoom, variant selection
-- Wishlist, cart, checkout (COD, Bank Transfer, optional online payment)
+- Product details with gallery, zoom, and variant selection
+- Wishlist, cart, checkout (COD, Bank Transfer, optional Stripe)
 - Customer accounts, order history, address book
-- Reviews & ratings
+- Reviews and ratings
 
 ### 🎨 Custom Print Studio
-- Dedicated landing page (`/custom-shirts`) and editor (`/customize`)
-- Garment selection: T‑Shirt, Oversized, Polo, Hoodie, Sweatshirt
-- Per‑location artwork (Front, Back, Left Sleeve, Right Sleeve)
-- Upload designs (PNG, JPG, WebP, SVG – max 10 MB)
-- Interactive canvas editor (drag, resize, rotate, boundary constraints)
-- Live preview with server‑calculated dynamic pricing
-- Custom order tracking with status workflow
+- Dedicated landing (`/custom-shirts`) and editor (`/customize`)
+- Garments: T-Shirt, Oversized, Polo, Hoodie, Sweatshirt
+- Per-location artwork (Front, Back, Left Sleeve, Right Sleeve)
+- Upload PNG / JPG / WebP / SVG (max 10 MB) with magic-byte validation
+- Interactive Konva.js editor — drag, resize, rotate, boundary constraints
+- Server-authoritative dynamic pricing with quantity discounts
+- Custom order status workflow with full history
 
 ### 🛠️ Admin Dashboard
 - Sales analytics and trends
-- Product, category, inventory management
-- Order and custom order management (design review, status updates)
-- Customer, coupon, review management
+- Product, category, variant, inventory management
+- Order and custom order management
+- Customer, coupon, and review moderation
 - Garment and print pricing configuration
 - Store settings
 
@@ -55,92 +55,100 @@ Maniesta Veyra is a full‑featured, production‑ready fashion e‑commerce pla
 
 ## 🧰 Tech Stack
 
-| Layer       | Technology |
-|-------------|------------|
-| Frontend    | Next.js 15 (App Router), React 18, TypeScript |
-| Styling     | Tailwind CSS, shadcn/ui, Radix UI |
-| State       | Zustand (cart, wishlist, customizer) |
-| Forms       | React Hook Form + Zod |
-| Database    | PostgreSQL (Supabase), Prisma ORM |
-| Auth        | Auth.js (NextAuth v5), JWT sessions, bcrypt |
-| Canvas      | Konva.js + react‑konva |
-| Payments    | COD, Bank Transfer, Stripe (optional, abstracted) |
-| Email       | Resend |
-| Rate Limit  | Upstash Redis |
-| Storage     | Vercel Blob (public + private buckets) |
-| PWA         | Serwist (service worker) |
-| Analytics   | Google Analytics 4, Sentry |
-| Testing     | Vitest, React Testing Library, Playwright |
-| Deployment  | Vercel, Supabase |
+| Layer | Technology |
+|-------|------------|
+| Framework | Next.js 15 (App Router), React 18, TypeScript 5 |
+| Styling | Tailwind CSS 3, shadcn/ui, Radix UI, Lucide |
+| State | Zustand 5 |
+| Forms | React Hook Form 7 + Zod 3 |
+| Database | PostgreSQL 16 (Supabase), Prisma 6 |
+| Auth | Auth.js v5 (NextAuth beta), JWT sessions, bcryptjs |
+| Canvas | Konva.js + react-konva |
+| Storage | Vercel Blob (public + private) |
+| Payments | COD, Bank Transfer, Stripe (optional, abstracted) |
+| Email | Resend |
+| Rate Limit | Upstash Redis |
+| PWA | Serwist 9 |
+| Monitoring | Sentry 10 |
+| Analytics | Google Analytics 4 |
+| Testing | Vitest 2, Testing Library, Playwright 1 |
+| Deployment | Netlify (+ `@netlify/plugin-nextjs`) |
 
 ---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js ≥ 20.x
-- npm ≥ 10.x
-- PostgreSQL database (Supabase recommended)
-- Vercel Blob storage (or S3‑compatible)
-- Resend API key (for emails)
-- Upstash Redis (for rate limiting)
+
+- **Node.js 20.18.x** (see `.nvmrc`)
+- npm ≥ 10
+- PostgreSQL (Supabase recommended)
+- Vercel Blob storage
+- Resend account (verified domain)
+- Upstash Redis instance
+- *(Optional)* Stripe, Sentry, GA4
 
 ### Installation
 
 ```bash
-# Clone the repository
 git clone <your-repo-url>
 cd maniesta-veyra
-
-# Install dependencies
 npm install
-
-# Set up environment variables
 cp .env.example .env.local
 ```
 
 ### Environment Variables
 
-Fill in `.env.local` with your values. See `.env.example` for the complete list.
+Fill in `.env.local`. See `.env.example` for the full list.
 
 ```bash
-# Database (Supabase)
-DATABASE_URL=postgresql://postgres:password@db.example.supabase.co:6543/postgres?pgbouncer=true
-DIRECT_URL=postgresql://postgres:password@db.example.supabase.co:5432/postgres
+# ── Database (Supabase) ──────────────────────────────────
+DATABASE_URL=postgresql://postgres:pw@db.xxx.supabase.co:6543/postgres?pgbouncer=true&connection_limit=1
+DIRECT_URL=postgresql://postgres:pw@db.xxx.supabase.co:5432/postgres
 
-# Auth
-AUTH_SECRET=your-secret-key-min-32-chars
+# ── Auth ─────────────────────────────────────────────────
+AUTH_SECRET=generate-with: openssl rand -base64 64
 AUTH_URL=http://localhost:3000
 
-# Storage
-BLOB_READ_WRITE_TOKEN=vercel_blob_token
+# ── Storage ──────────────────────────────────────────────
+BLOB_READ_WRITE_TOKEN=
 
-# Email
-RESEND_API_KEY=resend_api_key
+# ── Email ────────────────────────────────────────────────
+RESEND_API_KEY=
 EMAIL_FROM=orders@maniestaveyra.com
 
-# Rate Limiting
-UPSTASH_REDIS_URL=upstash_redis_url
-UPSTASH_REDIS_TOKEN=upstash_redis_token
+# ── Rate Limiting ────────────────────────────────────────
+UPSTASH_REDIS_URL=
+UPSTASH_REDIS_TOKEN=
 
-# Payments (optional)
+# ── Payments (optional) ──────────────────────────────────
 STRIPE_SECRET_KEY=
 STRIPE_WEBHOOK_SECRET=
 STRIPE_PUBLISHABLE_KEY=
 
-# Application
+# ── Public config ────────────────────────────────────────
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 NEXT_PUBLIC_APP_NAME=Maniesta Veyra
 NEXT_PUBLIC_APP_TAGLINE=Wear Your Identity.
-NEXT_PUBLIC_PORTFOLIO_URL=https://your-portfolio-url.com
-
-# Currency
+NEXT_PUBLIC_PORTFOLIO_URL=https://usmanmurtaza.netlify.app
 NEXT_PUBLIC_CURRENCY=PKR
 NEXT_PUBLIC_CURRENCY_SYMBOL=₨
 
-# Analytics
+# ── Analytics & Monitoring (optional) ────────────────────
 NEXT_PUBLIC_GA_ID=
 SENTRY_DSN=
+NEXT_PUBLIC_SENTRY_DSN=
+NEXT_PUBLIC_SENTRY_RELEASE=
+SENTRY_ORG=
+SENTRY_PROJECT=
+SENTRY_AUTH_TOKEN=
+
+# ── Cron (production) ────────────────────────────────────
+CRON_SECRET=
+
+# ── Admin bootstrap (one-time, then remove) ──────────────
+ADMIN_EMAIL=
+ADMIN_PASSWORD=
 ```
 
 ### Database Setup
@@ -149,14 +157,18 @@ SENTRY_DSN=
 # Generate Prisma client
 npx prisma generate
 
-# Run migrations
+# Apply migrations (local development)
 npx prisma migrate dev
 
-# Seed the database (categories, products, garments, pricing)
+# Seed sample data
 npm run db:seed
+```
 
-# (Optional) Create an admin user
-npx tsx prisma/seed-admin.ts
+For **production**, use:
+
+```bash
+npx prisma migrate deploy
+npm run db:seed-admin    # creates SUPER_ADMIN from env vars
 ```
 
 ### Run the Development Server
@@ -165,26 +177,31 @@ npx tsx prisma/seed-admin.ts
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to view the app.
+Open [http://localhost:3000](http://localhost:3000).
 
 ---
 
 ## 📦 Scripts
 
-| Command                 | Description                          |
-|-------------------------|--------------------------------------|
-| `npm run dev`           | Start development server             |
-| `npm run build`         | Production build                     |
-| `npm run start`         | Start production server              |
-| `npm run lint`          | Run ESLint                           |
-| `npm run test`          | Run unit tests (Vitest)              |
-| `npm run test:coverage` | Run tests with coverage report       |
-| `npm run test:e2e`      | Run Playwright E2E tests             |
-| `npm run db:generate`   | Generate Prisma client               |
-| `npm run db:migrate`    | Run database migrations              |
-| `npm run db:seed`       | Seed database with sample data       |
-| `npm run generate-icons`| Generate PWA icons from SVG source   |
-| `npm run lighthouse`    | Run Lighthouse CI checks             |
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Production build (runs `prisma generate` first) |
+| `npm run start` | Start production server |
+| `npm run lint` | Run ESLint |
+| `npm run typecheck` | Run TypeScript type checking only |
+| `npm run check` | Run `typecheck` + `lint` together |
+| `npm run test` | Unit tests (Vitest) |
+| `npm run test:coverage` | Unit tests + coverage report |
+| `npm run test:e2e` | Playwright E2E tests |
+| `npm run db:generate` | Generate Prisma client |
+| `npm run db:migrate` | Apply migrations (dev) |
+| `npm run db:migrate:deploy` | Apply migrations (production) |
+| `npm run db:seed` | Seed development data |
+| `npm run db:seed-admin` | Create the SUPER_ADMIN user from env |
+| `npm run db:studio` | Open Prisma Studio |
+| `npm run generate-icons` | Generate PWA icons from `icon-source.svg` |
+| `npm run lighthouse` | Run Lighthouse CI |
 
 ---
 
@@ -193,90 +210,130 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 ```
 maniesta-veyra/
 ├── src/
-│   ├── app/              # Next.js App Router pages & API routes
-│   ├── components/       # Reusable UI components
-│   ├── lib/              # Business logic, services, validation, etc.
-│   ├── hooks/            # Custom React hooks
-│   ├── stores/           # Zustand stores
-│   ├── types/            # TypeScript types
-│   └── middleware.ts     # Route protection & auth
+│   ├── app/                  # App Router pages + API routes
+│   │   ├── (public)/         # Homepage, shop, products, custom-shirts
+│   │   ├── account/          # Customer account area
+│   │   ├── admin/            # Admin dashboard
+│   │   ├── api/              # REST endpoints
+│   │   ├── auth/             # Login, register, password reset
+│   │   ├── cart/             # Shopping cart
+│   │   ├── checkout/         # Checkout + confirmation
+│   │   ├── customize/        # Custom Print Studio editor
+│   │   ├── wishlist/
+│   │   ├── manifest.ts       # PWA manifest
+│   │   ├── robots.ts         # robots.txt
+│   │   ├── sitemap.ts        # dynamic sitemap
+│   │   └── layout.tsx
+│   ├── components/           # Reusable UI + feature components
+│   ├── lib/
+│   │   ├── auth/             # Auth.js config, guards
+│   │   ├── db/               # Prisma client
+│   │   ├── services/         # Business logic (cart, order, pricing, etc.)
+│   │   ├── validation/       # Zod schemas
+│   │   ├── payments/         # Payment provider abstraction
+│   │   ├── storage/          # Blob upload helpers
+│   │   ├── security/         # Upload validation, rate limiting
+│   │   ├── email/            # Resend templates
+│   │   ├── analytics/        # GA4 event helpers
+│   │   └── env.ts            # Env validation
+│   ├── stores/               # Zustand (cart, customizer, wishlist)
+│   ├── hooks/
+│   ├── types/
+│   ├── instrumentation.ts        # Sentry server + edge
+│   ├── instrumentation-client.ts # Sentry browser
+│   ├── middleware.ts             # Route protection
+│   └── sw.ts                     # Serwist service worker
 ├── prisma/
-│   ├── schema.prisma     # Database schema
-│   ├── migrations/       # Database migrations
-│   ├── seed.ts           # Seed script
-│   └── seed-admin.ts     # Admin bootstrap script
-├── public/               # Static assets (images, icons)
-├── scripts/              # Utility scripts (icon generation)
-├── tests/                # Unit, integration, E2E tests
-├── .env.example          # Environment variables template
-├── next.config.mjs       # Next.js configuration
-├── tailwind.config.ts    # Tailwind CSS configuration
-├── vitest.config.ts      # Vitest configuration
-├── playwright.config.ts  # Playwright configuration
-└── package.json          # Dependencies and scripts
+│   ├── schema.prisma
+│   ├── migrations/
+│   ├── seed.ts
+│   └── seed-admin.ts
+├── public/
+│   ├── icons/                # PWA icons + logo source
+│   └── images/
+├── scripts/
+│   └── generate-icons.mjs
+├── tests/
+│   ├── unit/
+│   ├── integration/
+│   └── e2e/
+├── netlify/
+│   └── functions/
+│       └── cron-cleanup.mts
+├── netlify.toml
+├── next.config.mjs
+├── tailwind.config.ts
+├── vitest.config.ts
+├── playwright.config.ts
+├── lighthouserc.js
+├── .nvmrc
+├── .env.example
+└── package.json
 ```
 
 ---
 
 ## 🔐 Security
 
-- **Authentication**: Auth.js v5 with JWT sessions, HTTP‑only cookies, bcrypt hashing (cost 12)
-- **Authorization**: Server‑side guards (`requireAuth`, `requireAdmin`, `requireSuperAdmin`) on all sensitive routes
-- **Rate Limiting**: Upstash Redis sliding window on login, registration, uploads, coupons, and order creation
-- **Upload Validation**: Magic‑byte checks, MIME validation, size limits, SVG sanitization with `isomorphic-dompurify`
-- **Inventory Safety**: Atomic `UPDATE ... WHERE stock >= quantity` inside transactions to prevent overselling
-- **Idempotency**: Order creation supports `Idempotency-Key` to prevent duplicate orders
-- **Security Headers**: CSP, X‑Content‑Type‑Options, X‑Frame‑Options, Referrer‑Policy, Permissions‑Policy
+- **Authentication**: Auth.js v5 with JWT sessions, HTTP-only `Secure` cookies, bcrypt cost 12
+- **Authorization**: Server-side guards (`requireAuth`, `requireAdmin`, `requireSuperAdmin`) invoked in every sensitive route handler and server component
+- **Rate Limiting**: Upstash Redis sliding-window limiter on login, registration, password reset, uploads, coupon validation, and order creation
+- **Upload Validation**: MIME, extension, magic-byte (`file-type`), size and dimension checks; SVG sanitization via `isomorphic-dompurify`
+- **Inventory Safety**: Atomic `UPDATE ... WHERE stock >= quantity` inside Prisma transactions — prevents overselling under concurrency
+- **Idempotency**: Order creation accepts `Idempotency-Key` header; duplicate submissions return the existing order
+- **Headers**: CSP, HSTS, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy (set in `next.config.mjs` and mirrored in `netlify.toml`)
+- **Secrets**: Never exposed to the client. Only `NEXT_PUBLIC_*` variables reach the browser.
 
 ---
 
 ## 📱 PWA & Android Installability
 
-The app is installable on Android devices.
-
-- Web App Manifest configured with app name, theme color, and icons
+- Web App Manifest (`src/app/manifest.ts`) with name, theme color, icons
 - Service worker via **Serwist** for offline caching of public assets and product images
-- Private routes (`/api/*`, `/account`, `/checkout`, `/cart`, `/admin`, etc.) are **never cached**
+- Private routes (`/api/*`, `/account`, `/checkout`, `/cart`, `/admin`, `/wishlist`, `/auth`, `/customize`) are **never cached**
 
-To generate icons from your logo SVG, run:
+### Icons
+
+Two options:
+
+1. **Use your own PNG files** — place `icon-192.png`, `icon-512.png`, and `icon-maskable-512.png` directly in `public/icons/`.
+2. **Generate from an SVG** — place your source at `public/icons/icon-source.svg` and run:
 
 ```bash
 npm run generate-icons
 ```
 
-Place your SVG as `public/icons/icon-source.svg` before running.
-
 ---
 
 ## 🔍 SEO
 
-- Dynamic metadata for all pages (title, description, Open Graph, Twitter cards)
-- Structured data: Organization, Product, BreadcrumbList, WebSite
-- Dynamic sitemap (`/sitemap.xml`) and robots.txt
-- Clean, crawlable URLs (`/products/slug`, `/shop/category-slug`)
-- Admin, account, cart, and checkout pages are excluded from indexing
-- Image alt texts and semantic HTML
+- Dynamic metadata per route (title, description, Open Graph, Twitter cards)
+- Structured data: `Organization`, `Product`, `BreadcrumbList`, `WebSite`
+- Dynamic `sitemap.xml` (products + categories) and `robots.txt`
+- Clean URLs: `/products/{slug}`, `/shop/{category-slug}`
+- Admin, account, cart, checkout, and the editor are excluded from indexing
+- Semantic HTML and descriptive alt text on all images
 
 ---
 
 ## 🧪 Testing
 
-### Unit Tests (Vitest)
-- Pricing engine
+### Unit (Vitest)
+- Custom pricing engine
 - Coupon validation
-- Boundary constraints (customizer)
-- Input validation schemas
+- Customizer boundary constraints
+- Zod validation schemas
 
-### Integration Tests
+### Integration
 - Cart service (stock validation, merging)
 - Order service (transactions, idempotency)
 
-### E2E Tests (Playwright)
-- Customer journey: register → browse → cart → checkout
-- Custom Studio: garment selection → upload → edit → add to cart
+### E2E (Playwright)
+- Customer: register → browse → add to cart → checkout
+- Custom Studio: garment → upload → edit → add to cart
 - Admin: dashboard, product management, order status updates
 
-Run all tests:
+**E2E prerequisites:** dev server running (`npm run dev`), database seeded (`npm run db:seed`), and `.env.local` configured.
 
 ```bash
 npm run test
@@ -287,36 +344,49 @@ npm run test:e2e
 
 ## 🚢 Deployment
 
-The recommended production stack:
+**Production stack:**
 
-- **Frontend/API**: Vercel
-- **Database**: Supabase (PostgreSQL)
-- **Object Storage**: Vercel Blob
+- **Hosting**: Netlify (with `@netlify/plugin-nextjs`)
+- **Database**: Supabase (PostgreSQL 16, transaction pooler)
+- **Object Storage**: Vercel Blob (public + private buckets)
 - **Email**: Resend
 - **Rate Limiting**: Upstash Redis
-- **Monitoring**: Sentry
-- **Analytics**: GA4 + Vercel Analytics (optional)
+- **Monitoring**: Sentry 10
+- **Analytics**: Google Analytics 4
+- **Cron**: Netlify Scheduled Functions (`netlify/functions/cron-cleanup.mts`)
+
+### Netlify Configuration
+
+- `netlify.toml` pins Node 20.18.1, defines security headers, and registers `@netlify/plugin-nextjs`
+- All environment variables must be set in **Site configuration → Environment variables** (not in `netlify.toml`)
+- A daily scheduled function prunes expired password-reset tokens, deactivated coupons, and idle guest carts
 
 ### Production Checklist
-- [ ] Set all environment variables in Vercel
-- [ ] Run database migrations with `npx prisma migrate deploy`
-- [ ] Generate PWA icons
-- [ ] Configure custom domain and SSL
-- [ ] Verify security headers and CSP
-- [ ] Run Lighthouse and resolve performance/accessibility issues
-- [ ] Set up Sentry and GA4
+
+- [ ] Set all environment variables in Netlify (Production + Deploy previews scopes)
+- [ ] Connect custom domain and verify SSL
+- [ ] Run `npx prisma migrate deploy` against production database
+- [ ] Run `npm run db:seed-admin` once, then remove `ADMIN_EMAIL` / `ADMIN_PASSWORD`
+- [ ] Ensure PWA icons are present at `public/icons/`
+- [ ] Verify `/api/health` returns `{ "status": "ok" }`
+- [ ] Trigger a test order (COD) and confirm email delivery
+- [ ] Confirm Sentry receives an event from a preview deploy
+- [ ] Run Lighthouse on production URL (target: Perf ≥ 90, SEO ≥ 95, A11y ≥ 95)
+- [ ] Verify CSP has no console violations
 
 ---
 
 ## 🤝 Contributing
 
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+Pull requests are welcome. For major changes, please open an issue first to discuss what you'd like to change.
 
 ---
 
 ## 📄 License
 
-This project is licensed under the MIT License.
+**Proprietary.** © Maniesta Veyra. All rights reserved.
+
+If you intend this project to be open-sourced under MIT, add a `LICENSE` file at the repo root and update this section accordingly.
 
 ---
 
@@ -329,3 +399,57 @@ This project is licensed under the MIT License.
 ---
 
 *Maniesta Veyra — Wear Your Identity.*
+```
+
+---
+
+## Files to add alongside the README
+
+### `LICENSE` (if you're keeping MIT)
+
+If you actually want MIT, create `LICENSE`:
+
+```
+MIT License
+
+Copyright (c) 2025 Maniesta Veyra
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+Otherwise, if you want proprietary, **delete** the MIT badge and MIT text (the corrected README above already does).
+
+---
+
+## Summary
+
+| Fix | Reason |
+|-----|--------|
+| `./public/...` for logo | GitHub markdown resolution |
+| Netlify instead of Vercel | Actual deployment target |
+| Removed Vercel Analytics | Not in `package.json` anymore |
+| Added Sentry env vars | Sentry 10 requires them |
+| Added `CRON_SECRET`, `ADMIN_*` | Used by cron + seed-admin |
+| Added `typecheck`, `check`, `db:migrate:deploy`, `db:seed-admin`, `db:studio` | Missing from scripts table |
+| Node version pinned to 20.18.x | Matches `.nvmrc` and `engines` |
+| `migrate dev` vs `migrate deploy` clarified | Correct command per environment |
+| License clarified as Proprietary | No `LICENSE` file at root |
+| PWA icon section updated | You have your own PNG |
+| Cron job documented | Was missing entirely |
+| E2E prerequisites documented | Playwright needs server + DB |

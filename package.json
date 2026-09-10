@@ -2,9 +2,12 @@
   "name": "maniesta-veyra",
   "version": "2.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20.18.0"
+  },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest",
@@ -12,11 +15,15 @@
     "test:e2e": "playwright test",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
+    "db:seed-admin": "tsx prisma/seed-admin.ts",
+    "db:studio": "prisma studio",
     "postinstall": "prisma generate",
     "generate-icons": "node scripts/generate-icons.mjs",
     "lighthouse": "lhci autorun",
-    "check": "npx tsc --noEmit && npm run lint"
+    "typecheck": "tsc --noEmit",
+    "check": "tsc --noEmit && npm run lint"
   },
   "dependencies": {
     "@hookform/resolvers": "3.9.1",
@@ -37,8 +44,9 @@
     "@upstash/ratelimit": "2.0.5",
     "@upstash/redis": "1.34.3",
     "@vercel/blob": "2.8.0",
+    "@netlify/functions": "^2.8.2",
     "bcryptjs": "3.0.2",
-    "chart.js": "^4.5.1",
+    "chart.js": "4.5.1",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "file-type": "21.3.4",
@@ -49,7 +57,7 @@
     "next": "15.5.25",
     "next-auth": "5.0.0-beta.32",
     "react": "18.3.1",
-    "react-chartjs-2": "^5.3.1",
+    "react-chartjs-2": "5.3.1",
     "react-dom": "18.3.1",
     "react-hook-form": "7.54.2",
     "react-konva": "18.2.10",
@@ -67,28 +75,19 @@
     "@types/react": "18.3.18",
     "@types/react-dom": "18.3.5",
     "@vitejs/plugin-react": "4.3.4",
+    "@netlify/functions": "2.8.2",
+"@netlify/plugin-nextjs": "5.9.4",
     "autoprefixer": "10.4.20",
     "eslint": "8.57.1",
     "eslint-config-next": "15.5.25",
     "jsdom": "25.0.1",
-    "postcss": "8.5.23",
+    "postcss": "8.4.49",
     "prisma": "6.2.1",
-    "sharp": "0.35.4",
+    "sharp": "0.33.5",
     "tailwindcss": "3.4.17",
     "tsx": "4.19.2",
     "typescript": "5.7.3",
     "vitest": "2.1.9"
-  },
-  "overrides": {
-    "glob": "13.0.6",
-    "tar": "7.5.22",
-    "cookie": "0.7.0",
-    "tmp": "0.2.7",
-    "uuid": "14.0.2",
-    "esbuild": "0.28.2",
-    "browserslist": "4.28.7",
-    "vite": "6.4.3",
-    "extract-zip": "2.0.1"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

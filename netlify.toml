@@ -3,8 +3,43 @@
   publish = ".next"
 
 [build.environment]
-  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_APP_URL,NEXT_PUBLIC_APP_NAME,NEXT_PUBLIC_APP_TAGLINE,NEXT_PUBLIC_PORTFOLIO_URL,NEXT_PUBLIC_CURRENCY,NEXT_PUBLIC_CURRENCY_SYMBOL,NEXT_PUBLIC_GA_ID,NEXT_PUBLIC_VERCEL_ANALYTICS_ID,AUTH_URL"
-  SECRETS_SCAN_OMIT_PATHS = "README.md,.env.example,tests/**,playwright.config.ts,lighthouserc.js,src/lib/env.ts"
+  # Next.js 15 + Prisma 6 require Node 20
+  NODE_VERSION = "20.18.1"
+  NEXT_TELEMETRY_DISABLED = "1"
 
+  # ---------------------------------------------------------------------------
+  # Secret scanner exclusions.
+  # These are NOT where you define secret VALUES — those go in the Netlify UI
+  # (Site configuration → Environment variables). This block only tells the
+  # build-log secret scanner which keys are expected to appear in the build.
+  # ---------------------------------------------------------------------------
+  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_APP_URL,NEXT_PUBLIC_APP_NAME,NEXT_PUBLIC_APP_TAGLINE,NEXT_PUBLIC_PORTFOLIO_URL,NEXT_PUBLIC_CURRENCY,NEXT_PUBLIC_CURRENCY_SYMBOL,NEXT_PUBLIC_GA_ID,NEXT_PUBLIC_VERCEL_ANALYTICS_ID,NEXT_PUBLIC_SENTRY_DSN,NEXT_PUBLIC_SENTRY_RELEASE"
+
+  SECRETS_SCAN_OMIT_PATHS = "README.md,.env.example,tests/**,playwright.config.ts,lighthouserc.js,src/lib/env.ts,src/instrumentation-client.ts"
+
+# ---------------------------------------------------------------------------
+# Next.js runtime plugin (SSR, ISR, image optimization, route handlers)
+# ---------------------------------------------------------------------------
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+# ---------------------------------------------------------------------------
+# Optional: redirects
+# ---------------------------------------------------------------------------
+# [[redirects]]
+#   from = "/old-path"
+#   to = "/new-path"
+#   status = 301
+
+# ---------------------------------------------------------------------------
+# Optional: security headers (Netlify-level, in addition to next.config.mjs)
+# next.config.mjs already sets these via `headers()`. Add here only if the
+# next.config headers do not apply — usually they do, so this is a fallback.
+# ---------------------------------------------------------------------------
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "SAMEORIGIN"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
