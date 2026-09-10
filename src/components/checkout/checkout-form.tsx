@@ -10,9 +10,24 @@ import { PaymentMethodSelector } from './payment-method-selector';
 import { OrderSummary } from './order-summary';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
+import type { PaymentMethod } from '@prisma/client';
 
 interface CheckoutFormProps {
-  cart: any;
+  cart: {
+    id: string;
+    items: Array<{
+      id: string;
+      productVariantId: string | null;
+      customDesignId: string | null;
+      quantity: number;
+      unitPrice: number;
+      name: string;
+      imageUrl?: string;
+      color?: string;
+      size?: string;
+    }>;
+    subtotal: number;
+  };
   paymentMethods: string[];
 }
 
@@ -27,13 +42,23 @@ export function CheckoutForm({ cart, paymentMethods }: CheckoutFormProps) {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<Omit<CreateOrderInput, 'paymentMethod'>>({
-    resolver: zodResolver(
-      createOrderSchema.omit({ paymentMethod: true }) as any
-    ),
+  } = useForm<CreateOrderInput>({
+    resolver: zodResolver(createOrderSchema),
+    defaultValues: {
+      paymentMethod: (paymentMethods[0] || 'COD') as PaymentMethod,
+      shippingAddress: {
+        country: 'PK',
+        fullName: '',
+        phone: '',
+        addressLine1: '',
+        city: '',
+        state: '',
+        postalCode: '',
+      },
+    },
   });
 
-  const onSubmit = async (data: Omit<CreateOrderInput, 'paymentMethod'>) => {
+  const onSubmit = async (data: CreateOrderInput) => {
     setLoading(true);
     try {
       const response = await fetch('/api/orders', {
@@ -43,6 +68,7 @@ export function CheckoutForm({ cart, paymentMethods }: CheckoutFormProps) {
           ...data,
           paymentMethod,
           cartId: cart.id,
+          couponCode: couponCode || undefined,
           idempotencyKey: crypto.randomUUID(),
         }),
       });
@@ -77,12 +103,19 @@ export function CheckoutForm({ cart, paymentMethods }: CheckoutFormProps) {
       toast({ title: 'Coupon applied' });
     } else {
       setDiscount(0);
-      toast({ title: 'Invalid coupon', description: result.error?.message, variant: 'destructive' });
+      toast({
+        title: 'Invalid coupon',
+        description: result.error?.message,
+        variant: 'destructive',
+      });
     }
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="grid grid-cols-1 lg:grid-cols-3 gap-8"
+    >
       <div className="lg:col-span-2 space-y-6">
         <AddressForm register={register} errors={errors} />
         <PaymentMethodSelector
@@ -103,7 +136,11 @@ export function CheckoutForm({ cart, paymentMethods }: CheckoutFormProps) {
               Apply
             </Button>
           </div>
-          {discount > 0 && <p className="text-sm text-mv-success">Discount: -₨ {discount.toLocaleString()}</p>}
+          {discount > 0 && (
+            <p className="text-sm text-mv-success">
+              Discount: -₨ {discount.toLocaleString()}
+            </p>
+          )}
         </div>
       </div>
       <div>
