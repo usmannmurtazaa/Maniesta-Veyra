@@ -10,10 +10,11 @@ const createReviewSchema = z.object({
   orderItemId: z.string().optional(),
 });
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
-) {
+interface RouteContext {
+  params: Promise<{ slug: string }>;
+}
+
+export async function GET(_request: NextRequest, { params }: RouteContext) {
   try {
     const { slug } = await params;
     const product = await prisma.product.findUnique({
@@ -21,7 +22,10 @@ export async function GET(
       select: { id: true },
     });
     if (!product) {
-      return NextResponse.json({ error: { code: 'NOT_FOUND', message: 'Product not found' } }, { status: 404 });
+      return NextResponse.json(
+        { error: { code: 'NOT_FOUND', message: 'Product not found' } },
+        { status: 404 }
+      );
     }
 
     const reviews = await prisma.review.findMany({
@@ -31,7 +35,7 @@ export async function GET(
     });
 
     return NextResponse.json({ data: reviews });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch reviews' } },
       { status: 500 }
@@ -39,10 +43,7 @@ export async function GET(
   }
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
-) {
+export async function POST(request: NextRequest, { params }: RouteContext) {
   try {
     const session = await requireAuth();
     const { slug } = await params;
@@ -54,11 +55,16 @@ export async function POST(
       select: { id: true },
     });
     if (!product) {
-      return NextResponse.json({ error: { code: 'NOT_FOUND', message: 'Product not found' } }, { status: 404 });
+      return NextResponse.json(
+        { error: { code: 'NOT_FOUND', message: 'Product not found' } },
+        { status: 404 }
+      );
     }
 
     const existing = await prisma.review.findUnique({
-      where: { productId_userId: { productId: product.id, userId: session.user.id } },
+      where: {
+        productId_userId: { productId: product.id, userId: session.user.id },
+      },
     });
     if (existing) {
       return NextResponse.json(
@@ -83,7 +89,13 @@ export async function POST(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: error.issues } },
+        {
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid input',
+            details: error.issues,
+          },
+        },
         { status: 400 }
       );
     }

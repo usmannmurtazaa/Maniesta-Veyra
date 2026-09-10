@@ -1,22 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { wishlistService } from '@/lib/services/wishlist-service';
 import { requireAuth } from '@/lib/auth/guards';
+import { AppError } from '@/lib/errors';
 import { z } from 'zod';
 
 const addWishlistSchema = z.object({
   productId: z.string().min(1),
 });
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await requireAuth();
     const products = await wishlistService.getWishlist(session.user.id);
     return NextResponse.json({ data: products });
   } catch (error) {
-    if (error instanceof Error && error.message === 'Unauthorized') {
+    if (error instanceof AppError) {
       return NextResponse.json(
-        { error: { code: 'UNAUTHORIZED', message: 'Authentication required' } },
-        { status: 401 }
+        { error: { code: error.code, message: error.message } },
+        { status: error.statusCode }
       );
     }
     console.error('Error fetching wishlist:', error);
@@ -37,14 +38,20 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: { code: 'VALIDATION_ERROR', message: 'Invalid product ID', details: error.issues } },
+        {
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid product ID',
+            details: error.issues,
+          },
+        },
         { status: 400 }
       );
     }
-    if (error instanceof Error && error.message === 'Unauthorized') {
+    if (error instanceof AppError) {
       return NextResponse.json(
-        { error: { code: 'UNAUTHORIZED', message: 'Authentication required' } },
-        { status: 401 }
+        { error: { code: error.code, message: error.message } },
+        { status: error.statusCode }
       );
     }
     console.error('Error adding to wishlist:', error);

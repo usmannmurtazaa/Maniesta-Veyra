@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { productService } from '@/lib/services/product-service';
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { slug: string } }
-) {
+interface RouteContext {
+  params: Promise<{ slug: string }>;
+}
+
+export async function GET(_request: NextRequest, { params }: RouteContext) {
   try {
-    const product = await productService.getProductBySlug(params.slug);
+    const { slug } = await params;
+    const product = await productService.getProductBySlug(slug);
     if (!product) {
       return NextResponse.json(
         { error: { code: 'NOT_FOUND', message: 'Product not found' } },
