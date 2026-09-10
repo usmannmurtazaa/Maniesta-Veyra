@@ -1,4 +1,4 @@
-import NextAuth, { type DefaultSession, type User as NextAuthUser } from 'next-auth';
+import NextAuth, { type DefaultSession } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { compare } from 'bcryptjs';
 import { prisma } from '@/lib/db/prisma';
@@ -11,15 +11,9 @@ declare module 'next-auth' {
       role: UserRole;
     } & DefaultSession['user'];
   }
-  interface User extends NextAuthUser {
-    role?: UserRole;
-  }
-}
 
-declare module 'next-auth/jwt' {
-  interface JWT {
-    id: string;
-    role: UserRole;
+  interface User {
+    role?: UserRole;
   }
 }
 
@@ -32,7 +26,7 @@ export const {
   secret: process.env.AUTH_SECRET,
   session: {
     strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60,
   },
   pages: {
     signIn: '/auth/login',
@@ -50,15 +44,18 @@ export const {
           return null;
         }
 
+        const email = credentials.email as string;
+        const password = credentials.password as string;
+
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+          where: { email },
         });
 
         if (!user || !user.passwordHash || !user.isActive) {
           return null;
         }
 
-        const isValid = await compare(credentials.password, user.passwordHash);
+        const isValid = await compare(password, user.passwordHash);
         if (!isValid) {
           return null;
         }
@@ -75,15 +72,15 @@ export const {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
-        token.role = user.role as UserRole;
+        (token as Record<string, unknown>).id = user.id;
+        (token as Record<string, unknown>).role = user.role;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id as string;
-        session.user.role = token.role as UserRole;
+        session.user.id = (token as Record<string, unknown>).id as string;
+        session.user.role = (token as Record<string, unknown>).role as UserRole;
       }
       return session;
     },

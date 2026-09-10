@@ -3,7 +3,7 @@ import { cartService } from '@/lib/services/cart-service';
 import { auth } from '@/lib/auth/auth';
 import { getGuestSessionId, clearGuestSessionCookie } from '@/lib/utils/cart-session';
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -13,11 +13,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const guestSessionId = getGuestSessionId();
+    const guestSessionId = await getGuestSessionId();
     if (guestSessionId) {
       await cartService.mergeGuestCart(session.user.id, guestSessionId);
-      clearGuestSessionCookie();
+      await clearGuestSessionCookie();
     }
+
     return NextResponse.json({ data: { merged: true } });
   } catch (error) {
     console.error('Error merging cart:', error);

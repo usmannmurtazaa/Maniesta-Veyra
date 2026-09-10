@@ -13,11 +13,11 @@ export async function POST(request: NextRequest) {
     if (session?.user?.id) {
       cart = await cartService.getOrCreateCart({ userId: session.user.id });
     } else {
-      let guestSessionId = getGuestSessionId();
-      if (!guestSessionId) {
-        cart = await cartService.getOrCreateCart({ guestSessionId: undefined });
-        guestSessionId = cart.guestSessionId!;
-        setGuestSessionCookie(guestSessionId);
+      let guestSessionId = await getGuestSessionId();
+if (!guestSessionId) {
+  cart = await cartService.getOrCreateCart({ guestSessionId: undefined });
+  guestSessionId = cart.guestSessionId!;
+  await setGuestSessionCookie(guestSessionId);
       } else {
         cart = await cartService.getOrCreateCart({ guestSessionId });
       }

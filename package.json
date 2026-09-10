@@ -15,7 +15,8 @@
     "db:seed": "prisma db seed",
     "postinstall": "prisma generate",
     "generate-icons": "node scripts/generate-icons.mjs",
-    "lighthouse": "lhci autorun"
+    "lighthouse": "lhci autorun",
+    "check": "npx tsc --noEmit && npm run lint"
   },
   "dependencies": {
     "@hookform/resolvers": "3.9.1",

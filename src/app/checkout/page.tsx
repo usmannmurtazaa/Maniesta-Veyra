@@ -9,16 +9,20 @@ import { notFound } from 'next/navigation';
 export default async function CheckoutPage() {
   const session = await auth();
   let cart;
+
   if (session?.user?.id) {
     cart = await cartService.getOrCreateCart({ userId: session.user.id });
   } else {
-    const guestSessionId = getGuestSessionId();
+    const guestSessionId = await getGuestSessionId();
     if (!guestSessionId) return notFound();
     cart = await cartService.getOrCreateCart({ guestSessionId });
   }
 
   const detailedCart = await cartService.getCart(cart.id);
-  if (!detailedCart || detailedCart.items.filter((i) => !i.isSavedForLater).length === 0) {
+  if (
+    !detailedCart ||
+    detailedCart.items.filter((i) => !i.isSavedForLater).length === 0
+  ) {
     return notFound();
   }
 
@@ -39,9 +43,14 @@ export default async function CheckoutPage() {
         name: item.productVariant
           ? item.productVariant.product.name
           : `${item.customDesign?.garment.name} (Custom)`,
-        imageUrl: item.productVariant?.product.images[0]?.url || item.customDesign?.previewImageUrl,
-        color: item.productVariant?.color.name || item.customDesign?.color.name,
-        size: item.productVariant?.size.label || item.customDesign?.size.label,
+        imageUrl:
+          item.productVariant?.product.images[0]?.url ||
+          item.customDesign?.previewImageUrl ||
+          null,
+        color:
+          item.productVariant?.color.name || item.customDesign?.color.name || null,
+        size:
+          item.productVariant?.size.label || item.customDesign?.size.label || null,
       })),
     subtotal: detailedCart.items.reduce((sum, item) => {
       const price = item.productVariant

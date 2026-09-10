@@ -9,10 +9,7 @@ export class WishlistService {
           include: {
             product: {
               include: {
-                images: {
-                  where: { isPrimary: true },
-                  take: 1,
-                },
+                images: { where: { isPrimary: true }, take: 1 },
               },
             },
           },
@@ -23,31 +20,19 @@ export class WishlistService {
   }
 
   async addItem(userId: string, productId: string) {
-    // Ensure wishlist exists
-    let wishlist = await prisma.wishlist.findUnique({
-      where: { userId },
-    });
+    let wishlist = await prisma.wishlist.findUnique({ where: { userId } });
     if (!wishlist) {
-      wishlist = await prisma.wishlist.create({
-        data: { userId },
-      });
+      wishlist = await prisma.wishlist.create({ data: { userId } });
     }
 
-    // Check if product exists
-    const product = await prisma.product.findUnique({
-      where: { id: productId },
-    });
+    const product = await prisma.product.findUnique({ where: { id: productId } });
     if (!product) {
       throw new Error('Product not found');
     }
 
-    // Add item if not already present
     try {
       await prisma.wishlistItem.create({
-        data: {
-          wishlistId: wishlist.id,
-          productId,
-        },
+        data: { wishlistId: wishlist.id, productId },
       });
     } catch {
       // Already exists, ignore
@@ -56,16 +41,11 @@ export class WishlistService {
   }
 
   async removeItem(userId: string, productId: string) {
-    const wishlist = await prisma.wishlist.findUnique({
-      where: { userId },
-    });
+    const wishlist = await prisma.wishlist.findUnique({ where: { userId } });
     if (!wishlist) return false;
 
     await prisma.wishlistItem.deleteMany({
-      where: {
-        wishlistId: wishlist.id,
-        productId,
-      },
+      where: { wishlistId: wishlist.id, productId },
     });
     return true;
   }
@@ -73,13 +53,9 @@ export class WishlistService {
   async isInWishlist(userId: string, productId: string) {
     const wishlist = await prisma.wishlist.findUnique({
       where: { userId },
-      include: {
-        items: {
-          where: { productId },
-        },
-      },
+      include: { items: { where: { productId } } },
     });
-    return wishlist?.items.length > 0;
+    return (wishlist?.items?.length ?? 0) > 0;
   }
 }
 

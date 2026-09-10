@@ -11,7 +11,6 @@ export function getPaymentProvider(method: PaymentMethod): PaymentProvider {
     case PaymentMethod.BANK_TRANSFER:
       return new BankTransferProvider();
     case PaymentMethod.ONLINE:
-      // Only if Stripe is configured; otherwise throw
       try {
         return new StripeProvider();
       } catch {
@@ -23,7 +22,7 @@ export function getPaymentProvider(method: PaymentMethod): PaymentProvider {
 }
 
 export function getAvailablePaymentMethods(): PaymentMethod[] {
-  const methods = [PaymentMethod.COD, PaymentMethod.BANK_TRANSFER];
+  const methods: PaymentMethod[] = [PaymentMethod.COD, PaymentMethod.BANK_TRANSFER];
   if (process.env.STRIPE_SECRET_KEY) {
     methods.push(PaymentMethod.ONLINE);
   }

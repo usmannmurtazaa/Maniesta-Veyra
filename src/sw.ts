@@ -1,41 +1,21 @@
-import { defaultCache } from '@serwist/next/browser';
-import type { PrecacheEntry } from '@serwist/precaching';
-import { installSerwist } from '@serwist/sw';
+import { defaultCache } from '@serwist/next/worker';
+import type { PrecacheEntry, SerwistGlobalConfig } from 'serwist';
+import { Serwist } from 'serwist';
 
-declare const self: ServiceWorkerGlobalScope & {
-  __SW_MANIFEST: (PrecacheEntry | string)[] | undefined;
-};
+declare global {
+  interface WorkerGlobalScope extends SerwistGlobalConfig {
+    __SW_MANIFEST: (PrecacheEntry | string)[] | undefined;
+  }
+}
 
-installSerwist({
+declare const self: ServiceWorkerGlobalScope;
+
+const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST,
   skipWaiting: true,
   clientsClaim: true,
   navigationPreload: true,
-  runtimeCaching: [
-    {
-      urlPattern: /^https:\/\/.*\.blob\.vercel-storage\.com\/.*/i,
-      handler: 'CacheFirst',
-      options: {
-        cacheName: 'product-images',
-        expiration: { maxEntries: 200, maxAgeSeconds: 604800 },
-      },
-    },
-    {
-      urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-      handler: 'StaleWhileRevalidate',
-      options: { cacheName: 'google-fonts' },
-    },
-    {
-      urlPattern: /^https:\/\/www\.googletagmanager\.com\/.*/i,
-      handler: 'NetworkFirst',
-    },
-    {
-      urlPattern: /^\/api\/.*/i,
-      handler: 'NetworkOnly',
-    },
-    {
-      urlPattern: /^\/(account|checkout|cart|admin|wishlist|auth|customize).*/i,
-      handler: 'NetworkOnly',
-    },
-  ],
+  runtimeCaching: defaultCache,
 });
+
+serwist.addEventListeners();
