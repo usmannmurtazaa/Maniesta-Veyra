@@ -12,20 +12,22 @@ import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import type { PaymentMethod } from '@prisma/client';
 
+interface CheckoutCartItem {
+  id: string;
+  productVariantId: string | null;
+  customDesignId: string | null;
+  quantity: number;
+  unitPrice: number;
+  name: string;
+  imageUrl?: string | null;
+  color?: string | null;
+  size?: string | null;
+}
+
 interface CheckoutFormProps {
   cart: {
     id: string;
-    items: Array<{
-      id: string;
-      productVariantId: string | null;
-      customDesignId: string | null;
-      quantity: number;
-      unitPrice: number;
-      name: string;
-      imageUrl?: string;
-      color?: string;
-      size?: string;
-    }>;
+    items: CheckoutCartItem[];
     subtotal: number;
   };
   paymentMethods: string[];

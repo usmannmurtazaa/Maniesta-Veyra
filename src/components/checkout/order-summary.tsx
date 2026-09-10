@@ -1,7 +1,23 @@
 'use client';
 
+interface OrderSummaryItem {
+  id: string;
+  productVariantId: string | null;
+  customDesignId: string | null;
+  quantity: number;
+  unitPrice: number;
+  name: string;
+  imageUrl?: string | null;
+  color?: string | null;
+  size?: string | null;
+}
+
 interface OrderSummaryProps {
-  cart: any;
+  cart: {
+    id: string;
+    items: OrderSummaryItem[];
+    subtotal: number;
+  };
   discount: number;
 }
 
@@ -13,7 +29,7 @@ export function OrderSummary({ cart, discount }: OrderSummaryProps) {
     <div className="border border-mv-border rounded-lg p-6">
       <h2 className="font-semibold mb-4">Order Summary</h2>
       <div className="space-y-2">
-        {cart.items.map((item: any) => (
+        {cart.items.map((item) => (
           <div key={item.id} className="flex justify-between text-sm">
             <span>
               {item.name} × {item.quantity}
