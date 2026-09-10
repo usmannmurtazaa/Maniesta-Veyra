@@ -310,7 +310,6 @@ export class AdminService {
   }
 
   // ---------- CUSTOMERS ----------
-    // ---------- CUSTOMERS ----------
   async listCustomers(page: number, limit: number, search?: string) {
     const where: Prisma.UserWhereInput = search
       ? {
@@ -462,43 +461,51 @@ export class AdminService {
   }
 
   // ---------- PRINT PRICING ----------
-  async getPrintPricing(garmentId: string) {
-    return prisma.printPricing.findMany({
-      where: { garmentId },
-    });
+async getPrintPricing(garmentId: string) {
+  return prisma.printPricing.findMany({
+    where: { garmentId },
+  });
+}
+
+async updatePrintPricing(
+  garmentId: string,
+  location: Prisma.PrintPricingCreateInput['location'],
+  pricing: {
+    baseCost: number;
+    largePrintThresholdSqIn?: number | null;
+    largePrintSurcharge?: number | null;
+    quantityDiscountTiers: unknown;
+    isActive: boolean;
   }
+) {
+  const baseCost = new Prisma.Decimal(pricing.baseCost);
+  const largePrintThresholdSqIn =
+    pricing.largePrintThresholdSqIn != null
+      ? new Prisma.Decimal(pricing.largePrintThresholdSqIn)
+      : null;
+  // largePrintSurcharge is non-nullable with a DB default — always send a Decimal.
+  const largePrintSurcharge = new Prisma.Decimal(pricing.largePrintSurcharge ?? 0);
 
-  async updatePrintPricing(garmentId: string, location: any, pricing: any) {
-    const thresholdValue =
-      pricing.largePrintThresholdSqIn == null
-        ? { set: null }
-        : { set: new Prisma.Decimal(pricing.largePrintThresholdSqIn) };
-
-    const surchargeValue =
-      pricing.largePrintSurcharge == null
-        ? { set: null }
-        : { set: new Prisma.Decimal(pricing.largePrintSurcharge) };
-
-    return prisma.printPricing.upsert({
-      where: { garmentId_location: { garmentId, location } },
-      update: {
-        baseCost: new Prisma.Decimal(pricing.baseCost),
-        largePrintThresholdSqIn: thresholdValue,
-        largePrintSurcharge: surchargeValue,
-        quantityDiscountTiers: pricing.quantityDiscountTiers,
-        isActive: pricing.isActive,
-      },
-      create: {
-        garmentId,
-        location,
-        baseCost: new Prisma.Decimal(pricing.baseCost),
-        largePrintThresholdSqIn: pricing.largePrintThresholdSqIn == null ? null : new Prisma.Decimal(pricing.largePrintThresholdSqIn),
-        largePrintSurcharge: pricing.largePrintSurcharge == null ? null : new Prisma.Decimal(pricing.largePrintSurcharge),
-        quantityDiscountTiers: pricing.quantityDiscountTiers,
-        isActive: pricing.isActive,
-      },
-    });
-  }
+  return prisma.printPricing.upsert({
+    where: { garmentId_location: { garmentId, location } },
+    update: {
+      baseCost,
+      largePrintThresholdSqIn,
+      largePrintSurcharge,
+      quantityDiscountTiers: pricing.quantityDiscountTiers as Prisma.InputJsonValue,
+      isActive: pricing.isActive,
+    },
+    create: {
+      garmentId,
+      location,
+      baseCost,
+      largePrintThresholdSqIn,
+      largePrintSurcharge,
+      quantityDiscountTiers: pricing.quantityDiscountTiers as Prisma.InputJsonValue,
+      isActive: pricing.isActive,
+    },
+  });
+}
 
   // ---------- SETTINGS ----------
   async getSettings() {
