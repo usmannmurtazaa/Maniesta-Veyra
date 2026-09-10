@@ -52,17 +52,15 @@ export default withSentryConfig(withSerwist(nextConfig), {
   project: process.env.SENTRY_PROJECT,
   authToken: process.env.SENTRY_AUTH_TOKEN,
   silent: true,
-  // ✅ CRITICAL: Disable source maps — this is the primary fix
+  // ✅ Disable Sentry's webpack modifications entirely during build
+  // This prevents the clientReferenceManifest conflict
+  disableSentryWebpackConfig: true,
+  // ✅ Disable source maps
   sourcemaps: {
     disable: true,
   },
-  // ✅ Move deprecated options into webpack object
-  webpack: {
-    autoInstrumentServerFunctions: false,
-    autoInstrumentMiddleware: false,
-    autoInstrumentAppDirectory: false,
-    treeshake: {
-      removeDebugLogging: true,
-    },
-  },
+  // ✅ Turn off all instrumentation hooks
+  autoInstrumentServerFunctions: false,
+  autoInstrumentMiddleware: false,
+  autoInstrumentAppDirectory: false,
 });
