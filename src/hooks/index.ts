@@ -1,3 +1,5 @@
-// Custom hooks will be implemented in later phases.
-// This file is a placeholder to ensure the directory is present.
-export {};
+export { useCart } from './use-cart';
+export { useCustomizer } from './use-customizer';
+export { useMediaQuery } from './use-media-query';
+export { useSearch } from './use-search';
+export { useWishlist } from './use-wishlist';

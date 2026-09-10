@@ -1,0 +1,10 @@
+export const APP_NAME = 'Maniesta Veyra';
+export const APP_TAGLINE = 'Wear Your Identity.';
+export const CURRENCY = 'PKR';
+export const CURRENCY_SYMBOL = '₨';
+export const DEFAULT_PAGE_SIZE = 20;
+export const MAX_PAGE_SIZE = 50;
+export const LOW_STOCK_THRESHOLD = 5;
+export const MAX_UPLOAD_SIZE = 10 * 1024 * 1024; // 10 MB
+export const MIN_IMAGE_DIMENSION = 200;
+export const MAX_IMAGE_DIMENSION = 5000;
