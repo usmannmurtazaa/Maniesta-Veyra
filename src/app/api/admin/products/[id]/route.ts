@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth/guards';
 import { adminService } from '@/lib/services/admin-service';
+import { AppError } from '@/lib/errors';
 import { z } from 'zod';
 
 const updateProductSchema = z.object({
@@ -16,58 +17,86 @@ const updateProductSchema = z.object({
   careInstructions: z.string().optional(),
 });
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+interface RouteContext {
+  params: Promise<{ id: string }>;
+}
+
+export async function GET(_request: NextRequest, { params }: RouteContext) {
   try {
     await requireAdmin();
-    const product = await adminService.getProduct(params.id);
+    const { id } = await params;
+    const product = await adminService.getProduct(id);
     if (!product) {
-      return NextResponse.json({ error: { code: 'NOT_FOUND', message: 'Product not found' } }, { status: 404 });
+      return NextResponse.json(
+        { error: { code: 'NOT_FOUND', message: 'Product not found' } },
+        { status: 404 }
+      );
     }
     return NextResponse.json({ data: product });
-  } catch (error: any) {
-    if (error.code === 'UNAUTHORIZED' || error.code === 'FORBIDDEN') {
-      return NextResponse.json({ error: { code: error.code, message: error.message } }, { status: error.statusCode });
+  } catch (error) {
+    if (error instanceof AppError) {
+      return NextResponse.json(
+        { error: { code: error.code, message: error.message } },
+        { status: error.statusCode }
+      );
     }
-    return NextResponse.json({ error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch product' } }, { status: 500 });
+    return NextResponse.json(
+      { error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch product' } },
+      { status: 500 }
+    );
   }
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(request: NextRequest, { params }: RouteContext) {
   try {
     await requireAdmin();
+    const { id } = await params;
     const body = await request.json();
     const input = updateProductSchema.parse(body);
-    const product = await adminService.updateProduct(params.id, input);
+    const product = await adminService.updateProduct(id, input);
     return NextResponse.json({ data: product });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: error.issues } }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid input',
+            details: error.issues,
+          },
+        },
+        { status: 400 }
+      );
     }
-    if (error.code === 'UNAUTHORIZED' || error.code === 'FORBIDDEN') {
-      return NextResponse.json({ error: { code: error.code, message: error.message } }, { status: error.statusCode });
+    if (error instanceof AppError) {
+      return NextResponse.json(
+        { error: { code: error.code, message: error.message } },
+        { status: error.statusCode }
+      );
     }
-    return NextResponse.json({ error: { code: 'INTERNAL_ERROR', message: 'Failed to update product' } }, { status: 500 });
+    return NextResponse.json(
+      { error: { code: 'INTERNAL_ERROR', message: 'Failed to update product' } },
+      { status: 500 }
+    );
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(_request: NextRequest, { params }: RouteContext) {
   try {
     await requireAdmin();
-    await adminService.softDeleteProduct(params.id);
+    const { id } = await params;
+    await adminService.softDeleteProduct(id);
     return NextResponse.json({ data: { success: true } });
-  } catch (error: any) {
-    if (error.code === 'UNAUTHORIZED' || error.code === 'FORBIDDEN') {
-      return NextResponse.json({ error: { code: error.code, message: error.message } }, { status: error.statusCode });
+  } catch (error) {
+    if (error instanceof AppError) {
+      return NextResponse.json(
+        { error: { code: error.code, message: error.message } },
+        { status: error.statusCode }
+      );
     }
-    return NextResponse.json({ error: { code: 'INTERNAL_ERROR', message: 'Failed to delete product' } }, { status: 500 });
+    return NextResponse.json(
+      { error: { code: 'INTERNAL_ERROR', message: 'Failed to delete product' } },
+      { status: 500 }
+    );
   }
 }

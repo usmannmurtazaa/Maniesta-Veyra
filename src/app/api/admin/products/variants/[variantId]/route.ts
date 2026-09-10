@@ -10,33 +10,51 @@ const updateVariantSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { variantId: string } }
-) {
+interface RouteContext {
+  params: Promise<{ variantId: string }>;
+}
+
+export async function PATCH(request: NextRequest, { params }: RouteContext) {
   try {
     await requireAdmin();
+    const { variantId } = await params;
     const body = await request.json();
     const input = updateVariantSchema.parse(body);
     const variant = await prisma.productVariant.update({
-      where: { id: params.variantId },
+      where: { id: variantId },
       data: input,
     });
     return NextResponse.json({ data: variant });
   } catch (error) {
-    return NextResponse.json({ error: { code: 'INTERNAL_ERROR', message: 'Failed to update variant' } }, { status: 500 });
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid input',
+            details: error.issues,
+          },
+        },
+        { status: 400 }
+      );
+    }
+    return NextResponse.json(
+      { error: { code: 'INTERNAL_ERROR', message: 'Failed to update variant' } },
+      { status: 500 }
+    );
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { variantId: string } }
-) {
+export async function DELETE(_request: NextRequest, { params }: RouteContext) {
   try {
     await requireAdmin();
-    await prisma.productVariant.delete({ where: { id: params.variantId } });
+    const { variantId } = await params;
+    await prisma.productVariant.delete({ where: { id: variantId } });
     return NextResponse.json({ data: { success: true } });
-  } catch (error) {
-    return NextResponse.json({ error: { code: 'INTERNAL_ERROR', message: 'Failed to delete variant' } }, { status: 500 });
+  } catch {
+    return NextResponse.json(
+      { error: { code: 'INTERNAL_ERROR', message: 'Failed to delete variant' } },
+      { status: 500 }
+    );
   }
 }

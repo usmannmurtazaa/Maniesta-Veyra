@@ -12,22 +12,24 @@ const addVariantSchema = z.object({
   lowStockThreshold: z.number().int().nonnegative().optional(),
 });
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+interface RouteContext {
+  params: Promise<{ id: string }>;
+}
+
+export async function POST(request: NextRequest, { params }: RouteContext) {
   try {
     await requireAdmin();
+    const { id } = await params;
     const body = await request.json();
     const input = addVariantSchema.parse(body);
 
     const variant = await prisma.productVariant.create({
       data: {
-        productId: params.id,
+        productId: id,
         colorId: input.colorId,
         sizeId: input.sizeId,
         sku: input.sku,
-        price: input.price ? input.price : undefined,
+        price: input.price ?? null,
         stock: input.stock,
         lowStockThreshold: input.lowStockThreshold ?? 5,
         isActive: true,
@@ -36,8 +38,20 @@ export async function POST(
     return NextResponse.json({ data: variant }, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: error.issues } }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid input',
+            details: error.issues,
+          },
+        },
+        { status: 400 }
+      );
     }
-    return NextResponse.json({ error: { code: 'INTERNAL_ERROR', message: 'Failed to add variant' } }, { status: 500 });
+    return NextResponse.json(
+      { error: { code: 'INTERNAL_ERROR', message: 'Failed to add variant' } },
+      { status: 500 }
+    );
   }
 }

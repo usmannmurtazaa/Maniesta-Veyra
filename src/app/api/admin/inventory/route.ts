@@ -10,7 +10,10 @@ export async function GET(request: NextRequest) {
     const lowStockOnly = request.nextUrl.searchParams.get('lowStockOnly') === 'true';
     const result = await adminService.listInventory(page, limit, lowStockOnly);
     return NextResponse.json(result);
-  } catch (error: any) {
-    return NextResponse.json({ error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch inventory' } }, { status: 500 });
+  } catch {
+    return NextResponse.json(
+      { error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch inventory' } },
+      { status: 500 }
+    );
   }
 }
