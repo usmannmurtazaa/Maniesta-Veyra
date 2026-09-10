@@ -13,7 +13,15 @@ export default async function AdminCustomersPage({
   const page = Number(params.page || 1);
   const search = params.search;
 
-  const { data: customers } = await adminService.listCustomers(page, 20, search);
+  const { data } = await adminService.listCustomers(page, 20, search);
+const customers = data as Array<{
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  createdAt: Date;
+  _count: { orders: number };
+}>;
 
   return (
     <div>
