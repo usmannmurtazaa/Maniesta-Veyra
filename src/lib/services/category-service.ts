@@ -2,11 +2,13 @@ import { prisma } from '@/lib/db/prisma';
 import type { CategoryQuery } from '@/lib/validation/category.schema';
 
 export class CategoryService {
-  async getCategories(query: CategoryQuery) {
+  async getCategories(query: Partial<CategoryQuery> = {}) {
+    const { parent, includeInactive = false } = query;
+
     const categories = await prisma.category.findMany({
       where: {
-        isActive: !query.includeInactive ? true : undefined,
-        parentId: query.parent ?? null,
+        isActive: includeInactive ? undefined : true,
+        parentId: parent ?? null,
       },
       orderBy: { sortOrder: 'asc' },
       include: {
