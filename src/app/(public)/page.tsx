@@ -8,6 +8,12 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { publicEnv } from '@/lib/env';
 
+// ✅ CRITICAL FIX: Force dynamic rendering to bypass the clientReferenceManifest
+// bug that occurs during static prerendering with Sentry's webpack plugin.
+// Homepage will be server-rendered on each request (faster, always fresh data).
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 async function getFeaturedProducts() {
   const result = await productService.getProducts({
     page: 1,
@@ -73,7 +79,11 @@ export default async function HomePage() {
                   </Button>
                 </Link>
                 <Link href="/custom-shirts">
-                  <Button size="lg" variant="outline" className="border-mv-inverse/30 text-mv-inverse hover:bg-mv-inverse/10">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="border-mv-inverse/30 text-mv-inverse hover:bg-mv-inverse/10"
+                  >
                     Custom Print Studio
                   </Button>
                 </Link>
@@ -101,7 +111,9 @@ export default async function HomePage() {
                         className="object-cover transition-transform group-hover:scale-105"
                       />
                     ) : (
-                      <div className="flex items-center justify-center h-full text-mv-muted">No image</div>
+                      <div className="flex items-center justify-center h-full text-mv-muted">
+                        No image
+                      </div>
                     )}
                   </div>
                   <p className="mt-2 text-center font-medium">{cat.name}</p>
@@ -128,7 +140,9 @@ export default async function HomePage() {
                   slug={product.slug}
                   name={product.name}
                   price={Number(product.basePrice)}
-                  compareAtPrice={product.compareAtPrice ? Number(product.compareAtPrice) : undefined}
+                  compareAtPrice={
+                    product.compareAtPrice ? Number(product.compareAtPrice) : undefined
+                  }
                   imageUrl={product.images[0]?.url}
                   badge="New"
                 />
@@ -141,9 +155,12 @@ export default async function HomePage() {
         <Section>
           <Container>
             <div className="bg-mv-primary text-mv-inverse rounded-xl p-8 md:p-16 text-center">
-              <h2 className="font-display text-3xl md:text-4xl font-bold">Create Your Own Shirt</h2>
+              <h2 className="font-display text-3xl md:text-4xl font-bold">
+                Create Your Own Shirt
+              </h2>
               <p className="mt-2 text-mv-inverse-muted max-w-xl mx-auto">
-                Upload your design, position it, preview it, and order a custom printed shirt made just for you.
+                Upload your design, position it, preview it, and order a custom printed shirt
+                made just for you.
               </p>
               <Link href="/customize">
                 <Button size="lg" variant="accent" className="mt-6">
@@ -171,7 +188,9 @@ export default async function HomePage() {
                   slug={product.slug}
                   name={product.name}
                   price={Number(product.basePrice)}
-                  compareAtPrice={product.compareAtPrice ? Number(product.compareAtPrice) : undefined}
+                  compareAtPrice={
+                    product.compareAtPrice ? Number(product.compareAtPrice) : undefined
+                  }
                   imageUrl={product.images[0]?.url}
                 />
               ))}
@@ -193,7 +212,9 @@ export default async function HomePage() {
                   slug={product.slug}
                   name={product.name}
                   price={Number(product.basePrice)}
-                  compareAtPrice={product.compareAtPrice ? Number(product.compareAtPrice) : undefined}
+                  compareAtPrice={
+                    product.compareAtPrice ? Number(product.compareAtPrice) : undefined
+                  }
                   imageUrl={product.images[0]?.url}
                 />
               ))}
