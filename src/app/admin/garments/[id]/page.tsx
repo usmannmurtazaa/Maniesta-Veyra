@@ -3,10 +3,16 @@ import { adminService } from '@/lib/services/admin-service';
 import { GarmentForm } from '@/components/admin/garment-form';
 import { notFound } from 'next/navigation';
 
-export default async function AdminGarmentEditPage({ params }: { params: { id: string } }) {
+interface AdminGarmentEditPageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default async function AdminGarmentEditPage({ params }: AdminGarmentEditPageProps) {
   await requireAdmin();
+  const { id } = await params;
+
   const garments = await adminService.listGarments();
-  const garment = garments.find(g => g.id === params.id);
+  const garment = garments.find((g) => g.id === id);
   if (!garment) notFound();
 
   return (
