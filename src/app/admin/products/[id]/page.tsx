@@ -4,10 +4,17 @@ import { ProductEditForm } from '@/components/admin/product-edit-form';
 import { VariantManager } from '@/components/admin/variant-manager';
 import { notFound } from 'next/navigation';
 
-export default async function AdminProductEditPage({ params }: { params: { id: string } }) {
+interface AdminProductEditPageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default async function AdminProductEditPage({ params }: AdminProductEditPageProps) {
   await requireAdmin();
-  const product = await adminService.getProduct(params.id);
+  const { id } = await params;
+
+  const product = await adminService.getProduct(id);
   if (!product) notFound();
+
   const categories = await adminService.listCategories();
 
   return (
