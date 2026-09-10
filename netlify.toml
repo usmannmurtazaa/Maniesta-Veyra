@@ -3,9 +3,7 @@
   publish = ".next"
 
 [build.environment]
-  # ✅ Skip secrets scanning for NEXT_PUBLIC_* vars (they are intentionally public)
   SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_APP_URL,NEXT_PUBLIC_APP_NAME,NEXT_PUBLIC_APP_TAGLINE,NEXT_PUBLIC_PORTFOLIO_URL,NEXT_PUBLIC_CURRENCY,NEXT_PUBLIC_CURRENCY_SYMBOL,NEXT_PUBLIC_GA_ID,NEXT_PUBLIC_VERCEL_ANALYTICS_ID"
-  # ✅ Also skip scanning these files (they contain public documentation)
   SECRETS_SCAN_OMIT_PATHS = "README.md,.env.example,tests/**,playwright.config.ts,lighthouserc.js"
 
 [[plugins]]
