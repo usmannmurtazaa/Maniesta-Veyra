@@ -1,16 +1,19 @@
 import { requireAdmin } from '@/lib/auth/guards';
 import { adminService } from '@/lib/services/admin-service';
 import { ReviewModeration } from '@/components/admin/review-moderation';
+import { ReviewStatus } from '@prisma/client';
 
-export default async function AdminReviewsPage({
-  searchParams,
-}: {
-  searchParams: { page?: string; status?: string };
-}) {
+interface AdminReviewsPageProps {
+  searchParams: Promise<{ page?: string; status?: string }>;
+}
+
+export default async function AdminReviewsPage({ searchParams }: AdminReviewsPageProps) {
   await requireAdmin();
-  const page = Number(searchParams.page || 1);
-  const status = searchParams.status as any;
-  const { data: reviews, pagination } = await adminService.listReviews(page, 20, status);
+  const params = await searchParams;
+  const page = Number(params.page || 1);
+  const status = params.status as ReviewStatus | undefined;
+
+  const { data: reviews } = await adminService.listReviews(page, 20, status);
 
   return (
     <div>

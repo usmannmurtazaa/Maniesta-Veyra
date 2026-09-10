@@ -5,15 +5,17 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 
-export default async function AdminProductsPage({
-  searchParams,
-}: {
-  searchParams: { page?: string; search?: string };
-}) {
+interface AdminProductsPageProps {
+  searchParams: Promise<{ page?: string; search?: string }>;
+}
+
+export default async function AdminProductsPage({ searchParams }: AdminProductsPageProps) {
   await requireAdmin();
-  const page = Number(searchParams.page || 1);
-  const search = searchParams.search;
-  const { data: products, pagination } = await adminService.listProducts(page, 10, search);
+  const params = await searchParams;
+  const page = Number(params.page || 1);
+  const search = params.search;
+
+  const { data: products } = await adminService.listProducts(page, 10, search);
 
   return (
     <div>
@@ -51,7 +53,9 @@ export default async function AdminProductsPage({
                 <td className="p-3">
                   <div className="flex gap-2">
                     <Link href={`/admin/products/${product.id}`}>
-                      <Button variant="ghost" size="icon"><Pencil className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon">
+                        <Pencil className="h-4 w-4" />
+                      </Button>
                     </Link>
                     <form
                       action={async () => {

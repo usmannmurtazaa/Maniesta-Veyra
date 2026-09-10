@@ -1,17 +1,20 @@
 import { requireAdmin } from '@/lib/auth/guards';
 import { adminService } from '@/lib/services/admin-service';
 import { OrderStatusBadge } from '@/components/order/order-status-badge';
+import { OrderStatus } from '@prisma/client';
 import Link from 'next/link';
 
-export default async function AdminOrdersPage({
-  searchParams,
-}: {
-  searchParams: { page?: string; status?: string };
-}) {
+interface AdminOrdersPageProps {
+  searchParams: Promise<{ page?: string; status?: string }>;
+}
+
+export default async function AdminOrdersPage({ searchParams }: AdminOrdersPageProps) {
   await requireAdmin();
-  const page = Number(searchParams.page || 1);
-  const status = searchParams.status as any;
-  const { data: orders, pagination } = await adminService.listOrders(page, 10, status);
+  const params = await searchParams;
+  const page = Number(params.page || 1);
+  const status = params.status as OrderStatus | undefined;
+
+  const { data: orders } = await adminService.listOrders(page, 10, status);
 
   return (
     <div>
@@ -34,10 +37,17 @@ export default async function AdminOrdersPage({
                 <td className="p-3">{order.orderNumber}</td>
                 <td className="p-3">{order.customerEmail}</td>
                 <td className="p-3">₨ {Number(order.total).toLocaleString()}</td>
-                <td className="p-3"><OrderStatusBadge status={order.status} /></td>
-                <td className="p-3">{new Date(order.createdAt).toLocaleDateString()}</td>
                 <td className="p-3">
-                  <Link href={`/admin/orders/${order.id}`} className="text-mv-primary hover:underline">
+                  <OrderStatusBadge status={order.status} />
+                </td>
+                <td className="p-3">
+                  {new Date(order.createdAt).toLocaleDateString()}
+                </td>
+                <td className="p-3">
+                  <Link
+                    href={`/admin/orders/${order.id}`}
+                    className="text-mv-primary hover:underline"
+                  >
                     View
                   </Link>
                 </td>

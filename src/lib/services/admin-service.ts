@@ -1,4 +1,4 @@
-import { Prisma, OrderStatus, CustomOrderStatus, ReviewStatus, UserRole, CouponType } from '@prisma/client';
+import { Prisma, OrderStatus, CustomOrderStatus, ReviewStatus, UserRole } from '@prisma/client';
 import { prisma } from '@/lib/db/prisma';
 
 const LOW_STOCK_THRESHOLD = 5; // default threshold
