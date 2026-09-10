@@ -4,6 +4,6 @@ Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
   tracesSampleRate: 1.0,
   enabled: process.env.NODE_ENV === 'production',
-  replaysOnErrorSampleRate: 0.1,
-  replaysSessionSampleRate: 0.1,
 });
+
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
