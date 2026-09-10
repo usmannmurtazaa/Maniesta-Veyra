@@ -310,42 +310,43 @@ export class AdminService {
   }
 
   // ---------- CUSTOMERS ----------
+    // ---------- CUSTOMERS ----------
   async listCustomers(page: number, limit: number, search?: string) {
-  const where: Prisma.UserWhereInput = search
-    ? {
-        OR: [
-          { email: { contains: search, mode: 'insensitive' } },
-          { firstName: { contains: search, mode: 'insensitive' } },
-          { lastName: { contains: search, mode: 'insensitive' } },
-        ],
-      }
-    : {};
+    const where: Prisma.UserWhereInput = search
+      ? {
+          OR: [
+            { email: { contains: search, mode: 'insensitive' } },
+            { firstName: { contains: search, mode: 'insensitive' } },
+            { lastName: { contains: search, mode: 'insensitive' } },
+          ],
+        }
+      : {};
 
-  const [total, users] = await Promise.all([
-    prisma.user.count({ where: { ...where, role: UserRole.CUSTOMER } }),
-    prisma.user.findMany({
-      where: { ...where, role: UserRole.CUSTOMER },
-      skip: (page - 1) * limit,
-      take: limit,
-      include: { _count: { select: { orders: true } } },
-      orderBy: { createdAt: 'desc' },
-    }),
-  ]);
+    const [total, users] = await Promise.all([
+      prisma.user.count({ where: { ...where, role: UserRole.CUSTOMER } }),
+      prisma.user.findMany({
+        where: { ...where, role: UserRole.CUSTOMER },
+        skip: (page - 1) * limit,
+        take: limit,
+        include: { _count: { select: { orders: true } } },
+        orderBy: { createdAt: 'desc' },
+      }),
+    ]);
 
-  return {
-    data: users as Array<
-      Prisma.UserGetPayload<{
-        include: { _count: { select: { orders: true } } };
-      }>
-    >,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    },
-  };
-}
+    return {
+      data: users as Array<
+        Prisma.UserGetPayload<{
+          include: { _count: { select: { orders: true } } };
+        }>
+      >,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
 
   // ---------- COUPONS ----------
   async listCoupons() {
