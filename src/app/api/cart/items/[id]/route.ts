@@ -3,19 +3,27 @@ import { cartService } from '@/lib/services/cart-service';
 import { updateCartItemSchema } from '@/lib/validation/cart.schema';
 import { ZodError } from 'zod';
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+interface RouteContext {
+  params: Promise<{ id: string }>;
+}
+
+export async function PATCH(request: NextRequest, { params }: RouteContext) {
   try {
+    const { id } = await params;
     const body = await request.json();
     const input = updateCartItemSchema.parse(body);
-    const item = await cartService.updateItem(params.id, input);
+    const item = await cartService.updateItem(id, input);
     return NextResponse.json({ data: item });
   } catch (error) {
     if (error instanceof ZodError) {
       return NextResponse.json(
-        { error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: error.issues } },
+        {
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid input',
+            details: error.issues,
+          },
+        },
         { status: 400 }
       );
     }
@@ -39,12 +47,10 @@ export async function PATCH(
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(_request: NextRequest, { params }: RouteContext) {
   try {
-    await cartService.removeItem(params.id);
+    const { id } = await params;
+    await cartService.removeItem(id);
     return NextResponse.json({ data: { success: true } });
   } catch (error) {
     console.error('Error removing cart item:', error);
