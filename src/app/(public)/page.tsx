@@ -1,43 +1,34 @@
 import Image from 'next/image';
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
 import { productService } from '@/lib/services/product-service';
 import { categoryService } from '@/lib/services/category-service';
 import { Container, Section, PageHeader } from '@/components/layout';
 import { ProductCardClient } from '@/components/product/product-card-client';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
 import { publicEnv } from '@/lib/env';
 
-// ✅ Force dynamic rendering to bypass the clientReferenceManifest
-// bug that occurs during static prerendering with Sentry's webpack plugin.
-export const dynamic = 'force-dynamic';
+// Prerender, then revalidate every 5 minutes (or use on-demand revalidation
+// from admin product actions for tighter freshness).
+export const revalidate = 300;
 
 async function getFeaturedProducts() {
   const result = await productService.getProducts({
-    page: 1,
-    limit: 4,
-    collections: 'featured',
-    sort: 'newest',
+    page: 1, limit: 4, collections: 'featured', sort: 'newest',
   });
   return result.data;
 }
 
 async function getNewArrivals() {
   const result = await productService.getProducts({
-    page: 1,
-    limit: 4,
-    collections: 'new',
-    sort: 'newest',
+    page: 1, limit: 4, collections: 'new', sort: 'newest',
   });
   return result.data;
 }
 
 async function getBestSellers() {
   const result = await productService.getProducts({
-    page: 1,
-    limit: 4,
-    collections: 'bestseller',
-    sort: 'popular',
+    page: 1, limit: 4, collections: 'bestseller', sort: 'popular',
   });
   return result.data;
 }
@@ -56,7 +47,7 @@ export default async function HomePage() {
 
   return (
     <main>
-      {/* Hero Section */}
+      {/* Hero */}
       <section className="relative overflow-hidden bg-mv-dark text-mv-inverse">
         <div className="container-mv py-24 md:py-32 lg:py-40">
           <div className="max-w-2xl">
@@ -67,8 +58,8 @@ export default async function HomePage() {
               {publicEnv.NEXT_PUBLIC_APP_TAGLINE}
             </p>
             <p className="mt-6 text-mv-inverse-muted max-w-lg">
-              Premium ready-made clothing and a custom print studio. Create something that
-              belongs to you.
+              Premium ready-made clothing and a custom print studio. Create
+              something that belongs to you.
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
               <Link href="/shop">
@@ -90,64 +81,72 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Featured Categories */}
+      {/* Categories */}
       <Section>
         <Container>
           <div className="mb-8">
             <PageHeader title="Shop by Category" subtitle="Discover curated collections" />
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {categories.map((cat) => (
-              <Link key={cat.id} href={`/shop/${cat.slug}`} className="group">
-                <div className="aspect-square bg-mv-bg-alt rounded-lg overflow-hidden relative">
-                  {cat.imageUrl ? (
-                    <Image
-                      src={cat.imageUrl}
-                      alt={cat.name}
-                      fill
-                      sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
-                      className="object-cover transition-transform group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-mv-muted">
-                      No image
-                    </div>
-                  )}
-                </div>
-                <p className="mt-2 text-center font-medium">{cat.name}</p>
-              </Link>
-            ))}
-          </div>
+          {categories.length === 0 ? (
+            <p className="text-mv-muted text-center py-12">
+              Categories coming soon.
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {categories.map((cat) => (
+                <Link key={cat.id} href={`/shop/${cat.slug}`} className="group">
+                  <div className="aspect-square bg-mv-bg-alt rounded-lg overflow-hidden relative">
+                    {cat.imageUrl ? (
+                      <Image
+                        src={cat.imageUrl}
+                        alt={cat.name}
+                        fill
+                        sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
+                        className="object-cover transition-transform group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-mv-muted">
+                        No image
+                      </div>
+                    )}
+                  </div>
+                  <p className="mt-2 text-center font-medium">{cat.name}</p>
+                </Link>
+              ))}
+            </div>
+          )}
         </Container>
       </Section>
 
       {/* New Arrivals */}
-      <Section className="bg-mv-bg-alt">
-        <Container>
-          <div className="flex items-center justify-between mb-8">
-            <PageHeader title="New Arrivals" />
-            <Link href="/shop?collections=new">
-              <Button variant="ghost">View All</Button>
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {newArrivals.map((product) => (
-              <ProductCardClient
-                key={product.id}
-                id={product.id}
-                slug={product.slug}
-                name={product.name}
-                price={Number(product.basePrice)}
-                compareAtPrice={
-                  product.compareAtPrice ? Number(product.compareAtPrice) : undefined
-                }
-                imageUrl={product.images[0]?.url}
-                badge="New"
-              />
-            ))}
-          </div>
-        </Container>
-      </Section>
+      {newArrivals.length > 0 && (
+        <Section className="bg-mv-bg-alt">
+          <Container>
+            <div className="flex items-center justify-between mb-8">
+              <PageHeader title="New Arrivals" />
+              <Link href="/shop?collections=new">
+                <Button variant="ghost">View All</Button>
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {newArrivals.map((product) => (
+                <ProductCardClient
+                  key={product.id}
+                  id={product.id}
+                  slug={product.slug}
+                  name={product.name}
+                  price={Number(product.basePrice)}
+                  compareAtPrice={
+                    product.compareAtPrice ? Number(product.compareAtPrice) : undefined
+                  }
+                  imageUrl={product.images[0]?.url}
+                  badge="New"
+                />
+              ))}
+            </div>
+          </Container>
+        </Section>
+      )}
 
       {/* Custom Studio CTA */}
       <Section>
@@ -157,8 +156,8 @@ export default async function HomePage() {
               Create Your Own Shirt
             </h2>
             <p className="mt-2 text-mv-inverse-muted max-w-xl mx-auto">
-              Upload your design, position it, preview it, and order a custom printed shirt
-              made just for you.
+              Upload your design, position it, preview it, and order a custom
+              printed shirt made just for you.
             </p>
             <Link href="/customize">
               <Button size="lg" variant="accent" className="mt-6">
@@ -170,55 +169,59 @@ export default async function HomePage() {
       </Section>
 
       {/* Best Sellers */}
-      <Section className="bg-mv-bg-alt">
-        <Container>
-          <div className="flex items-center justify-between mb-8">
-            <PageHeader title="Best Sellers" />
-            <Link href="/shop?collections=bestseller">
-              <Button variant="ghost">View All</Button>
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {bestSellers.map((product) => (
-              <ProductCardClient
-                key={product.id}
-                id={product.id}
-                slug={product.slug}
-                name={product.name}
-                price={Number(product.basePrice)}
-                compareAtPrice={
-                  product.compareAtPrice ? Number(product.compareAtPrice) : undefined
-                }
-                imageUrl={product.images[0]?.url}
-              />
-            ))}
-          </div>
-        </Container>
-      </Section>
+      {bestSellers.length > 0 && (
+        <Section className="bg-mv-bg-alt">
+          <Container>
+            <div className="flex items-center justify-between mb-8">
+              <PageHeader title="Best Sellers" />
+              <Link href="/shop?collections=bestseller">
+                <Button variant="ghost">View All</Button>
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {bestSellers.map((product) => (
+                <ProductCardClient
+                  key={product.id}
+                  id={product.id}
+                  slug={product.slug}
+                  name={product.name}
+                  price={Number(product.basePrice)}
+                  compareAtPrice={
+                    product.compareAtPrice ? Number(product.compareAtPrice) : undefined
+                  }
+                  imageUrl={product.images[0]?.url}
+                />
+              ))}
+            </div>
+          </Container>
+        </Section>
+      )}
 
-      {/* Featured Products */}
-      <Section>
-        <Container>
-          <div className="mb-8">
-            <PageHeader title="Featured" />
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {featured.map((product) => (
-              <ProductCardClient
-                key={product.id}
-                id={product.id}
-                slug={product.slug}
-                name={product.name}
-                price={Number(product.basePrice)}
-                compareAtPrice={
-                  product.compareAtPrice ? Number(product.compareAtPrice) : undefined
-                }
-                imageUrl={product.images[0]?.url}
-              />
-            ))}
-          </div>
-        </Container>
-      </Section>
+      {/* Featured */}
+      {featured.length > 0 && (
+        <Section>
+          <Container>
+            <div className="mb-8">
+              <PageHeader title="Featured" />
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {featured.map((product) => (
+                <ProductCardClient
+                  key={product.id}
+                  id={product.id}
+                  slug={product.slug}
+                  name={product.name}
+                  price={Number(product.basePrice)}
+                  compareAtPrice={
+                    product.compareAtPrice ? Number(product.compareAtPrice) : undefined
+                  }
+                  imageUrl={product.images[0]?.url}
+                />
+              ))}
+            </div>
+          </Container>
+        </Section>
+      )}
     </main>
   );
 }

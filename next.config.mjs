@@ -1,10 +1,12 @@
 import { withSentryConfig } from '@sentry/nextjs';
 import withSerwistInit from '@serwist/next';
-import path from 'path';
+import path from 'node:path';
 
 const isDev = process.env.NODE_ENV === 'development';
-const isProd = process.env.NODE_ENV === 'production';
 const hasSentryToken = Boolean(process.env.SENTRY_AUTH_TOKEN);
+const hasSentryDsn = Boolean(
+  process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN
+);
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -16,16 +18,8 @@ const nextConfig = {
   images: {
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '*.blob.vercel-storage.com',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-        pathname: '/**',
-      },
+      { protocol: 'https', hostname: '*.blob.vercel-storage.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'images.unsplash.com', pathname: '/**' },
     ],
     minimumCacheTTL: 60 * 60 * 24 * 30,
   },
@@ -52,8 +46,8 @@ const nextConfig = {
   },
 
   webpack: (config, { isServer }) => {
-    // Konva pulls in `canvas` on the server side (Node), which is a
-    // native module we do not need. Stub it out so the build succeeds.
+    // Konva pulls in the `canvas` native module on the server.
+    // Stub it out so Next.js can build without it.
     if (isServer) {
       config.resolve.alias = {
         ...config.resolve.alias,
@@ -65,7 +59,7 @@ const nextConfig = {
 };
 
 // ---------------------------------------------------------------------------
-// Serwist (PWA) — disable in dev to keep HMR fast
+// Serwist (PWA)
 // ---------------------------------------------------------------------------
 const withSerwist = withSerwistInit({
   swSrc: 'src/sw.ts',
@@ -75,29 +69,36 @@ const withSerwist = withSerwistInit({
   reloadOnOnline: true,
 });
 
-// ---------------------------------------------------------------------------
-// Sentry — wrap, but DO NOT run its webpack plugins unless we have a token.
-// This is what actually prevents the clientReferenceManifest build conflict.
-// ---------------------------------------------------------------------------
 const configWithSerwist = withSerwist(nextConfig);
 
-export default withSentryConfig(configWithSerwist, {
-  org: process.env.SENTRY_ORG,
-  project: process.env.SENTRY_PROJECT,
-  authToken: process.env.SENTRY_AUTH_TOKEN,
-  silent: !hasSentryToken,
+// ---------------------------------------------------------------------------
+// Sentry — apply the wrapper only when a DSN exists.
+// Single top-level export (required by ESM).
+// ---------------------------------------------------------------------------
+let exportedConfig = configWithSerwist;
 
-  // ✅ These are the real options that disable the plugins causing your build conflict.
-  disableServerWebpackPlugin: !hasSentryToken,
-  disableClientWebpackPlugin: !hasSentryToken,
+if (hasSentryDsn) {
+  exportedConfig = withSentryConfig(configWithSerwist, {
+    org: process.env.SENTRY_ORG,
+    project: process.env.SENTRY_PROJECT,
+    authToken: process.env.SENTRY_AUTH_TOKEN,
 
-  // ✅ Keep the runtime SDK, but do not upload source maps.
-  widenClientFileUpload: false,
-  hideSourceMaps: true,
-  disableLogger: true,
+    silent: !hasSentryToken,
 
-  // ✅ These control SDK auto-instrumentation, not the webpack plugin.
-  autoInstrumentServerFunctions: isProd,
-  autoInstrumentMiddleware: isProd,
-  autoInstrumentAppDirectory: isProd,
-});
+    // Prevent the "clientReferenceManifest" build conflict in Next 15:
+    // disable Sentry's webpack plugins when we cannot upload source maps.
+    disableServerWebpackPlugin: !hasSentryToken,
+    disableClientWebpackPlugin: !hasSentryToken,
+
+    widenClientFileUpload: false,
+
+    // v10: replaces the deprecated `hideSourceMaps`
+    sourcemaps: {
+      deleteSourcemapsAfterUpload: true,
+    },
+
+    disableLogger: true,
+  });
+}
+
+export default exportedConfig;

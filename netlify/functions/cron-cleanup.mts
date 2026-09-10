@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export default async () => {
+const cronCleanup = async () => {
   const now = new Date();
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
@@ -38,6 +38,9 @@ export default async () => {
     { headers: { 'content-type': 'application/json' } }
   );
 };
+
+// Named function → no more ESLint warning
+export default cronCleanup;
 
 // Runs daily at 03:00 UTC
 export const config: Config = {
