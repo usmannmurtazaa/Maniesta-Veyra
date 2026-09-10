@@ -52,4 +52,15 @@ export default withSentryConfig(withSerwist(nextConfig), {
   project: process.env.SENTRY_PROJECT,
   authToken: process.env.SENTRY_AUTH_TOKEN,
   silent: true,
+  // ✅ CRITICAL FIX: Disable source map generation to prevent
+  // clientReferenceManifest errors during static prerendering
+  sourcemaps: {
+    disable: true,
+  },
+  // ✅ Don't upload source maps to Sentry
+  widenClientFileUpload: false,
+  // ✅ Disable automatic instrumentation
+  autoInstrumentServerFunctions: false,
+  autoInstrumentMiddleware: false,
+  autoInstrumentAppDirectory: false,
 });
