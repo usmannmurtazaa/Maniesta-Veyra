@@ -4,19 +4,38 @@ import { adminService } from '@/lib/services/admin-service';
 import { ReviewStatus } from '@prisma/client';
 import { z } from 'zod';
 
-const statusSchema = z.object({ status: z.nativeEnum(ReviewStatus) });
+const statusSchema = z.object({
+  status: z.nativeEnum(ReviewStatus),
+});
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+interface RouteContext {
+  params: Promise<{ id: string }>;
+}
+
+export async function PATCH(request: NextRequest, { params }: RouteContext) {
   try {
     await requireAdmin();
+    const { id } = await params;
     const body = await request.json();
     const { status } = statusSchema.parse(body);
-    const review = await adminService.updateReviewStatus(params.id, status);
+    const review = await adminService.updateReviewStatus(id, status);
     return NextResponse.json({ data: review });
-  } catch (error: any) {
-    return NextResponse.json({ error: { code: 'INTERNAL_ERROR', message: 'Failed to update review' } }, { status: 500 });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid input',
+            details: error.issues,
+          },
+        },
+        { status: 400 }
+      );
+    }
+    return NextResponse.json(
+      { error: { code: 'INTERNAL_ERROR', message: 'Failed to update review' } },
+      { status: 500 }
+    );
   }
 }

@@ -11,7 +11,10 @@ export async function GET(request: NextRequest) {
     const status = request.nextUrl.searchParams.get('status') as ReviewStatus | undefined;
     const result = await adminService.listReviews(page, limit, status);
     return NextResponse.json(result);
-  } catch (error) {
-    return NextResponse.json({ error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch reviews' } }, { status: 500 });
+  } catch {
+    return NextResponse.json(
+      { error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch reviews' } },
+      { status: 500 }
+    );
   }
 }
