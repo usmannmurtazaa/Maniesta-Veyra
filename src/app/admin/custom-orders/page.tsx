@@ -1,17 +1,22 @@
 import { requireAdmin } from '@/lib/auth/guards';
 import { adminService } from '@/lib/services/admin-service';
 import { Badge } from '@/components/ui/badge';
+import { CustomOrderStatus } from '@prisma/client';
 import Link from 'next/link';
+
+interface AdminCustomOrdersPageProps {
+  searchParams: Promise<{ page?: string; status?: string }>;
+}
 
 export default async function AdminCustomOrdersPage({
   searchParams,
-}: {
-  searchParams: { page?: string; status?: string };
-}) {
+}: AdminCustomOrdersPageProps) {
   await requireAdmin();
-  const page = Number(searchParams.page || 1);
-  const status = searchParams.status as any;
-  const { data: trackings, pagination } = await adminService.listCustomOrders(page, 10, status);
+  const params = await searchParams;
+  const page = Number(params.page || 1);
+  const status = params.status as CustomOrderStatus | undefined;
+
+  const { data: trackings } = await adminService.listCustomOrders(page, 10, status);
 
   return (
     <div>
@@ -34,10 +39,17 @@ export default async function AdminCustomOrdersPage({
                 <td className="p-3">{tracking.id.slice(0, 8)}...</td>
                 <td className="p-3">{tracking.orderItem.order.customerEmail}</td>
                 <td className="p-3">{tracking.orderItem.customDesign?.garment.name}</td>
-                <td className="p-3"><Badge>{tracking.status.replace(/_/g, ' ')}</Badge></td>
-                <td className="p-3">{new Date(tracking.createdAt).toLocaleDateString()}</td>
                 <td className="p-3">
-                  <Link href={`/admin/custom-orders/${tracking.id}`} className="text-mv-primary hover:underline">
+                  <Badge>{tracking.status.replace(/_/g, ' ')}</Badge>
+                </td>
+                <td className="p-3">
+                  {new Date(tracking.createdAt).toLocaleDateString()}
+                </td>
+                <td className="p-3">
+                  <Link
+                    href={`/admin/custom-orders/${tracking.id}`}
+                    className="text-mv-primary hover:underline"
+                  >
                     Review
                   </Link>
                 </td>
