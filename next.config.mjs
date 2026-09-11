@@ -39,8 +39,12 @@ const nextConfig = {
   productionBrowserSourceMaps: false,
 
   // Next 15 native replacement for webpack externals for Konva.
-  // Prevents Next from trying to bundle Konva's native `canvas` dep on the server.
-  serverExternalPackages: ['konva', 'react-konva'],
+  serverExternalPackages: [
+    'konva',
+    'react-konva',
+    'file-type',
+    'image-size',
+  ],
 
   images: {
     formats: ['image/avif', 'image/webp'],

@@ -3,7 +3,8 @@
   publish = ".next"
 
 [build.environment]
-  # Next.js 15 + Prisma 6 require Node 20
+  # Next.js 15 + Prisma 6 require Node 20; Netlify's Next.js plugin
+  # requires Node 22 as of 5.15.x.
   NODE_VERSION = "22.20.0"
   NEXT_TELEMETRY_DISABLED = "1"
 
@@ -18,23 +19,46 @@
   SECRETS_SCAN_OMIT_PATHS = "README.md,.env.example,tests/**,playwright.config.ts,lighthouserc.js,src/lib/env.ts,src/instrumentation-client.ts"
 
 # ---------------------------------------------------------------------------
+# Functions
+# ---------------------------------------------------------------------------
+[functions]
+  # Use esbuild — respects `external_node_modules`, produces smaller bundles.
+  node_bundler = "esbuild"
+
+  # Do NOT bundle these into the Lambda. Required for isomorphic-dompurify
+  # (which loads jsdom at runtime) — jsdom reads its own .json data files
+  # via fs, and those files are lost if webpack bundles jsdom.
+  external_node_modules = ["isomorphic-dompurify", "jsdom"]
+
+# ---------------------------------------------------------------------------
+# Disable Netlify asset optimization — Next.js already optimized everything.
+# Post-processing doubles build time and can break hash-based caching.
+# ---------------------------------------------------------------------------
+[build.processing]
+  skip_processing = true
+
+[build.processing.css]
+  bundle = false
+  minify = false
+
+[build.processing.js]
+  bundle = false
+  minify = false
+
+[build.processing.html]
+  pretty_urls = false
+
+[build.processing.images]
+  compress = false
+
+# ---------------------------------------------------------------------------
 # Next.js runtime plugin (SSR, ISR, image optimization, route handlers)
 # ---------------------------------------------------------------------------
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
 # ---------------------------------------------------------------------------
-# Optional: redirects
-# ---------------------------------------------------------------------------
-# [[redirects]]
-#   from = "/old-path"
-#   to = "/new-path"
-#   status = 301
-
-# ---------------------------------------------------------------------------
-# Optional: security headers (Netlify-level, in addition to next.config.mjs)
-# next.config.mjs already sets these via `headers()`. Add here only if the
-# next.config headers do not apply — usually they do, so this is a fallback.
+# Security headers
 # ---------------------------------------------------------------------------
 [[headers]]
   for = "/*"
@@ -43,3 +67,29 @@
     X-Frame-Options = "SAMEORIGIN"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+# ---------------------------------------------------------------------------
+# Service worker — must be served with correct MIME + scope
+# ---------------------------------------------------------------------------
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+    Content-Type = "application/javascript; charset=utf-8"
+    Service-Worker-Allowed = "/"
+
+# ---------------------------------------------------------------------------
+# Web manifest — correct content-type for installability
+# ---------------------------------------------------------------------------
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+
+# ---------------------------------------------------------------------------
+# Offline fallback — should never be cached aggressively
+# ---------------------------------------------------------------------------
+[[headers]]
+  for = "/offline.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
