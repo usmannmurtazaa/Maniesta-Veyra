@@ -1,114 +1,100 @@
-import { Container, Section, PageHeader } from '@/components/layout';
-import { Reveal } from '@/components/shared/reveal';
-import { publicEnv } from '@/lib/env';
+import { Container, Section } from '@/components/layout';
+import { SectionHeading } from '@/components/shared/section-heading';
+import Link from 'next/link';
 
 export const metadata = {
   title: 'Returns & Exchanges | Maniesta Veyra',
   description:
-    'Understand return eligibility, non-returnable items, custom print policies, and the return process for Maniesta Veyra.',
-  openGraph: {
-    title: 'Returns & Exchanges | Maniesta Veyra',
-    description: 'Return and exchange policy for Maniesta Veyra products.',
-    url: `${publicEnv.NEXT_PUBLIC_APP_URL}/returns`,
-    type: 'website',
-  },
+    'Return and exchange policy for Maniesta Veyra orders — including custom-printed items.',
 };
 
 export default function ReturnsPage() {
   return (
-    <main>
-      <section className="bg-mv-dark text-mv-inverse">
-        <Container className="py-20 md:py-28">
-          <Reveal>
-            <PageHeader
-              title="Returns & Exchanges"
-              subtitle="Our commitment to your satisfaction"
-            />
-          </Reveal>
-        </Container>
-      </section>
+    <Section>
+      <Container>
+        <div className="mx-auto max-w-3xl">
+          <SectionHeading
+            eyebrow="Policy"
+            title="Returns & exchanges"
+            subtitle="We want you to be happy with what you receive."
+          />
 
-      <Section>
-        <Container className="max-w-3xl space-y-10">
-          <Reveal>
-            <div>
-              <h2 className="font-display text-2xl md:text-3xl font-bold text-mv-text">
-                Return Eligibility
-              </h2>
-              <p className="mt-3 text-mv-text-secondary">
-                Ready-made items may be eligible for return or exchange within a limited period
-                after delivery, provided they are unworn, unwashed, and in original packaging
-                with tags attached. The exact return window is communicated during checkout
-                and in your order confirmation.
-              </p>
-            </div>
-          </Reveal>
+          <div className="prose prose-neutral mt-10 max-w-none">
+            <h2 className="font-display text-2xl font-bold text-mv-text">
+              Standard returns
+            </h2>
+            <p className="mt-3 text-mv-text-secondary">
+              Ready-made items can be exchanged within <strong>14 days</strong>{' '}
+              of delivery if they are unworn, unwashed, and still have the
+              original tags attached. We do not offer cash refunds at this time —
+              exchanges or store credit only.
+            </p>
 
-          <Reveal>
-            <div>
-              <h2 className="font-display text-2xl md:text-3xl font-bold text-mv-text">
-                Non-Returnable Items
-              </h2>
-              <p className="mt-3 text-mv-text-secondary">
-                For hygiene reasons, certain items such as undergarments and accessories may not
-                be returnable. Items marked as final sale or clearance are also non-returnable.
-              </p>
-            </div>
-          </Reveal>
+            <h2 className="mt-10 font-display text-2xl font-bold text-mv-text">
+              Custom-printed items
+            </h2>
+            <p className="mt-3 text-mv-text-secondary">
+              Custom-printed products are made specifically for you and cannot
+              be returned or exchanged unless there is a printing or
+              manufacturing defect. Please review your design carefully in the
+              customizer before adding it to your cart.
+            </p>
+            <p className="mt-3 text-mv-text-secondary">
+              If you receive a custom item with a defect, contact us within 7
+              days of delivery with photos of the issue and we will reprint it
+              at no cost.
+            </p>
 
-          <Reveal>
-            <div>
-              <h2 className="font-display text-2xl md:text-3xl font-bold text-mv-text">
-                Custom Printed Items
-              </h2>
-              <p className="mt-3 text-mv-text-secondary">
-                Custom printed items are made to order and cannot be returned or exchanged
-                unless there is a manufacturing defect or an error on our part. Please review
-                your design carefully before ordering.
-              </p>
-            </div>
-          </Reveal>
+            <h2 className="mt-10 font-display text-2xl font-bold text-mv-text">
+              Defective or incorrect items
+            </h2>
+            <p className="mt-3 text-mv-text-secondary">
+              If your item arrives damaged, misprinted, or is not what you
+              ordered, contact us within 7 days of delivery. We will cover the
+              cost of return shipping and send a replacement.
+            </p>
 
-          <Reveal>
-            <div>
-              <h2 className="font-display text-2xl md:text-3xl font-bold text-mv-text">
-                Damaged or Wrong Items
-              </h2>
-              <p className="mt-3 text-mv-text-secondary">
-                If you receive a damaged or incorrect item, contact our support team within 48
-                hours of delivery with photos and your order number. We will arrange a
-                replacement or refund as appropriate.
-              </p>
-            </div>
-          </Reveal>
+            <h2 className="mt-10 font-display text-2xl font-bold text-mv-text">
+              How to start a return
+            </h2>
+            <ol className="mt-4 space-y-2 text-mv-text-secondary list-decimal pl-6">
+              <li>Email us at <a href="mailto:orders@maniestaveyra.com" className="text-mv-accent underline-offset-4 hover:underline">orders@maniestaveyra.com</a> within the return window.</li>
+              <li>Include your order number and a brief reason for the return.</li>
+              <li>Wait for our confirmation — we will send you the return address and instructions.</li>
+              <li>Ship the item back within 7 days of confirmation.</li>
+            </ol>
 
-          <Reveal>
-            <div>
-              <h2 className="font-display text-2xl md:text-3xl font-bold text-mv-text">
-                Return Process
-              </h2>
-              <p className="mt-3 text-mv-text-secondary">
-                To initiate a return, contact support with your order details. We will provide
-                instructions and a return address. Return shipping costs may be deducted from
-                your refund unless the item is defective.
-              </p>
-            </div>
-          </Reveal>
+            <h2 className="mt-10 font-display text-2xl font-bold text-mv-text">
+              Return shipping
+            </h2>
+            <p className="mt-3 text-mv-text-secondary">
+              Return shipping for customer-initiated exchanges is paid by the
+              customer. For defective or incorrect items, we cover the cost and
+              will send a prepaid shipping label.
+            </p>
 
-          <Reveal>
-            <div>
-              <h2 className="font-display text-2xl md:text-3xl font-bold text-mv-text">
-                Refunds
-              </h2>
-              <p className="mt-3 text-mv-text-secondary">
-                Once your return is received and inspected, we will process the refund to your
-                original payment method. Please allow up to 7–10 business days for the refund
-                to appear in your account.
-              </p>
-            </div>
-          </Reveal>
-        </Container>
-      </Section>
-    </main>
+            <h2 className="mt-10 font-display text-2xl font-bold text-mv-text">
+              Sale items
+            </h2>
+            <p className="mt-3 text-mv-text-secondary">
+              Items purchased at a discount are eligible for exchange but not
+              refunded in cash, unless they arrive defective.
+            </p>
+
+            <p className="mt-10 text-sm text-mv-text-secondary">
+              Still have a question? Visit our{' '}
+              <Link href="/faq" className="text-mv-accent underline-offset-4 hover:underline">
+                FAQ
+              </Link>{' '}
+              or{' '}
+              <Link href="/contact" className="text-mv-accent underline-offset-4 hover:underline">
+                contact us
+              </Link>
+              .
+            </p>
+          </div>
+        </div>
+      </Container>
+    </Section>
   );
 }

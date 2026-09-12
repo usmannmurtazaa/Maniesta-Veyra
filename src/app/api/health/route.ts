@@ -22,6 +22,8 @@ export async function GET() {
       version: process.env.NEXT_PUBLIC_APP_VERSION ?? '0.1.0',
     });
   } catch (error) {
+    // Log for server-side debugging; do not leak details to the client.
+    console.error('[health] database ping failed:', error);
     return NextResponse.json(
       {
         status: 'degraded',

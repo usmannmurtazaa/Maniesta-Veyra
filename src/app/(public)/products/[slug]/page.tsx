@@ -35,7 +35,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
       </div>
 
       <Suspense fallback={<div>Loading related products...</div>}>
-        <RelatedProducts categoryId={product.categoryId} currentProductId={product.id} />
+        <RelatedProducts
+  categoryId={product.categoryId}
+  categorySlug={product.category.slug}
+  currentProductId={product.id}
+/>
       </Suspense>
     </Container>
   );

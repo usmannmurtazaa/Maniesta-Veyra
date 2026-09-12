@@ -1,152 +1,103 @@
-import { Container, Section, PageHeader } from '@/components/layout';
-import { Reveal } from '@/components/shared/reveal';
-import { publicEnv } from '@/lib/env';
+import { Container, Section } from '@/components/layout';
+import { SectionHeading } from '@/components/shared/section-heading';
 
 export const metadata = {
   title: 'Privacy Policy | Maniesta Veyra',
   description:
-    'How Maniesta Veyra collects, uses, protects, and manages your personal information.',
-  openGraph: {
-    title: 'Privacy Policy | Maniesta Veyra',
-    description: 'Privacy practices of Maniesta Veyra.',
-    url: `${publicEnv.NEXT_PUBLIC_APP_URL}/privacy`,
-    type: 'website',
-  },
+    'How Maniesta Veyra collects, uses, and protects your personal information.',
 };
 
 export default function PrivacyPage() {
   return (
-    <main>
-      <section className="bg-mv-dark text-mv-inverse">
-        <Container className="py-20 md:py-28">
-          <Reveal>
-            <PageHeader
-              title="Privacy Policy"
-              subtitle="Your privacy and trust matter to us"
-            />
-          </Reveal>
-        </Container>
-      </section>
+    <Section>
+      <Container>
+        <div className="mx-auto max-w-3xl">
+          <SectionHeading
+            eyebrow="Legal"
+            title="Privacy policy"
+            subtitle="Last updated: December 2025"
+          />
 
-      <Section>
-        <Container className="max-w-3xl space-y-10">
-          <Reveal>
-            <div>
-              <h2 className="font-display text-2xl md:text-3xl font-bold text-mv-text">
-                Information We Collect
-              </h2>
-              <p className="mt-3 text-mv-text-secondary">
-                We collect personal information you provide during account creation, order
-                placement, and custom design upload, including name, email, phone, shipping
-                address, and payment details. Payment information is processed securely by our
-                payment providers and is not stored on our servers.
-              </p>
-            </div>
-          </Reveal>
+          <div className="prose prose-neutral mt-10 max-w-none">
+            <p className="text-mv-text-secondary">
+              Maniesta Veyra (&ldquo;we&rdquo;, &ldquo;us&rdquo;) respects your
+              privacy. This policy explains what information we collect, how we
+              use it, and the choices you have. By using our website you agree
+              to this policy.
+            </p>
 
-          <Reveal>
-            <div>
-              <h2 className="font-display text-2xl md:text-3xl font-bold text-mv-text">
-                How We Use Your Data
-              </h2>
-              <p className="mt-3 text-mv-text-secondary">
-                We use your data to process orders, communicate about your purchases, improve
-                our services, and comply with legal obligations. We do not sell your personal
-                data to third parties.
-              </p>
-            </div>
-          </Reveal>
+            <h2 className="mt-10 font-display text-xl font-bold text-mv-text">
+              Information we collect
+            </h2>
+            <ul className="mt-3 space-y-2 text-mv-text-secondary list-disc pl-6">
+              <li>Account details you provide — name, email, phone number, and password.</li>
+              <li>Order details — shipping address, items purchased, and payment method.</li>
+              <li>Custom design files you upload to our print studio.</li>
+              <li>Technical data — IP address, browser type, and pages visited for analytics.</li>
+            </ul>
 
-          <Reveal>
-            <div>
-              <h2 className="font-display text-2xl md:text-3xl font-bold text-mv-text">
-                Custom Artwork and Uploads
-              </h2>
-              <p className="mt-3 text-mv-text-secondary">
-                Designs you upload for custom printing are stored securely and used solely for
-                fulfilling your order. We do not use your artwork for marketing or any other
-                purpose without your explicit permission.
-              </p>
-            </div>
-          </Reveal>
+            <h2 className="mt-10 font-display text-xl font-bold text-mv-text">
+              How we use your information
+            </h2>
+            <ul className="mt-3 space-y-2 text-mv-text-secondary list-disc pl-6">
+              <li>To process and ship your orders.</li>
+              <li>To send order confirmations, shipping updates, and support responses.</li>
+              <li>To improve our website, product range, and shopping experience.</li>
+              <li>To detect and prevent fraud.</li>
+            </ul>
 
-          <Reveal>
-            <div>
-              <h2 className="font-display text-2xl md:text-3xl font-bold text-mv-text">
-                Cookies and Analytics
-              </h2>
-              <p className="mt-3 text-mv-text-secondary">
-                We use cookies and analytics tools (such as Google Analytics) to understand
-                how visitors interact with our site, improve performance, and enhance user
-                experience. You can control cookie preferences through your browser settings.
-              </p>
-            </div>
-          </Reveal>
+            <h2 className="mt-10 font-display text-xl font-bold text-mv-text">
+              What we do not do
+            </h2>
+            <p className="mt-3 text-mv-text-secondary">
+              We do not sell your personal information to third parties. We do
+              not use your uploaded custom designs for marketing without your
+              explicit permission.
+            </p>
 
-          <Reveal>
-            <div>
-              <h2 className="font-display text-2xl md:text-3xl font-bold text-mv-text">
-                Communications
-              </h2>
-              <p className="mt-3 text-mv-text-secondary">
-                We may send transactional emails about your orders, as well as occasional
-                marketing communications if you have opted in. You can unsubscribe from
-                marketing emails at any time.
-              </p>
-            </div>
-          </Reveal>
+            <h2 className="mt-10 font-display text-xl font-bold text-mv-text">
+              Cookies
+            </h2>
+            <p className="mt-3 text-mv-text-secondary">
+              We use cookies to keep you signed in, remember your cart, and
+              measure site performance. You can disable cookies in your browser
+              settings, though parts of the site may not work correctly if you
+              do.
+            </p>
 
-          <Reveal>
-            <div>
-              <h2 className="font-display text-2xl md:text-3xl font-bold text-mv-text">
-                Data Security
-              </h2>
-              <p className="mt-3 text-mv-text-secondary">
-                We implement appropriate technical and organizational measures to protect your
-                personal data against unauthorized access, alteration, or disclosure.
-              </p>
-            </div>
-          </Reveal>
+            <h2 className="mt-10 font-display text-xl font-bold text-mv-text">
+              Data security
+            </h2>
+            <p className="mt-3 text-mv-text-secondary">
+              We use industry-standard security measures to protect your
+              information, including encrypted connections (HTTPS) and secure
+              password storage. No online system is completely immune to
+              attack — if you ever suspect your account is compromised, contact
+              us immediately.
+            </p>
 
-          <Reveal>
-            <div>
-              <h2 className="font-display text-2xl md:text-3xl font-bold text-mv-text">
-                Data Retention
-              </h2>
-              <p className="mt-3 text-mv-text-secondary">
-                We retain personal information only as long as necessary to fulfil the purposes
-                described in this policy or as required by law. You may request deletion of your
-                account and associated data at any time.
-              </p>
-            </div>
-          </Reveal>
+            <h2 className="mt-10 font-display text-xl font-bold text-mv-text">
+              Your rights
+            </h2>
+            <p className="mt-3 text-mv-text-secondary">
+              You can request a copy of the personal data we hold about you, ask
+              us to correct it, or ask us to delete it. To do so, email{' '}
+              <a href="mailto:orders@maniestaveyra.com" className="text-mv-accent underline-offset-4 hover:underline">
+                orders@maniestaveyra.com
+              </a>
+              .
+            </p>
 
-          <Reveal>
-            <div>
-              <h2 className="font-display text-2xl md:text-3xl font-bold text-mv-text">
-                Your Rights
-              </h2>
-              <p className="mt-3 text-mv-text-secondary">
-                You have the right to access, correct, update, or delete your personal data,
-                and to object to or restrict certain processing. To exercise these rights,
-                contact us using the details on our Contact page.
-              </p>
-            </div>
-          </Reveal>
-
-          <Reveal>
-            <div>
-              <h2 className="font-display text-2xl md:text-3xl font-bold text-mv-text">
-                Contact Us
-              </h2>
-              <p className="mt-3 text-mv-text-secondary">
-                If you have any questions about this Privacy Policy or how we handle your data,
-                please reach out via our contact page or the support email provided there.
-              </p>
-            </div>
-          </Reveal>
-        </Container>
-      </Section>
-    </main>
+            <h2 className="mt-10 font-display text-xl font-bold text-mv-text">
+              Changes to this policy
+            </h2>
+            <p className="mt-3 text-mv-text-secondary">
+              We may update this policy from time to time. The date at the top
+              of this page reflects the most recent version.
+            </p>
+          </div>
+        </div>
+      </Container>
+    </Section>
   );
 }

@@ -1,13 +1,28 @@
-export function ContactPageJsonLd() {
+import { publicEnv } from '@/lib/env';
+
+interface ContactPageJsonLdProps {
+  supportEmail?: string;
+}
+
+export function ContactPageJsonLd({ supportEmail }: ContactPageJsonLdProps) {
   const data = {
     '@context': 'https://schema.org',
     '@type': 'ContactPage',
-    name: 'Contact Maniesta Veyra',
-    url: `${process.env.NEXT_PUBLIC_APP_URL}/contact`,
+    name: `Contact ${publicEnv.NEXT_PUBLIC_APP_NAME}`,
+    url: `${publicEnv.NEXT_PUBLIC_APP_URL}/contact`,
     mainEntity: {
       '@type': 'Organization',
-      name: 'Maniesta Veyra',
-      email: process.env.EMAIL_FROM,
+      name: publicEnv.NEXT_PUBLIC_APP_NAME,
+      url: publicEnv.NEXT_PUBLIC_APP_URL,
+      contactPoint: supportEmail
+        ? {
+            '@type': 'ContactPoint',
+            contactType: 'customer support',
+            email: supportEmail,
+            availableLanguage: ['English', 'Urdu'],
+            areaServed: 'PK',
+          }
+        : undefined,
     },
   };
 

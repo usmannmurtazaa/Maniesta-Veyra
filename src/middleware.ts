@@ -49,12 +49,12 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Run middleware on everything EXCEPT:
-     *   - api routes
-     *   - _next assets
-     *   - metadata + PWA files
-     *   - static fallback pages
-     *   - asset folders
+     * Run middleware on all routes EXCEPT:
+     *   - API routes
+     *   - Next.js internals
+     *   - metadata files (robots, sitemap, manifest)
+     *   - service worker & offline fallback
+     *   - static assets & icons
      */
     '/((?!api|_next/static|_next/image|favicon.ico|favicon-32.png|favicon-192.png|apple-touch-icon.png|robots.txt|sitemap.xml|manifest.webmanifest|sw.js|offline.html|icons|images).*)',
   ],

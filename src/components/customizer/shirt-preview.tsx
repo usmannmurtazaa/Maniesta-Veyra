@@ -22,8 +22,10 @@ export function ShirtPreview({
   className,
 }: ShirtPreviewProps) {
   return (
-    <div className={`relative aspect-[5/6] overflow-hidden rounded-lg border border-mv-border bg-mv-bg-alt ${className ?? ''}`}>
-      {/* Garment base */}
+    <div
+      className={`relative aspect-[5/6] overflow-hidden rounded-lg border border-mv-border bg-mv-bg-alt ${className ?? ''}`}
+    >
+      {/* Garment base — static asset, use next/image */}
       {garmentImageUrl ? (
         <Image
           src={garmentImageUrl}
@@ -38,12 +40,16 @@ export function ShirtPreview({
         </div>
       )}
 
-      {/* Design overlay */}
+      {/* Design overlay — user-uploaded blob, positioned via CSS transforms.
+          next/image cannot optimize a blob: URL, and the transforms make the
+          optimizer irrelevant. Native <img> is the correct choice here. */}
       {designImageUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={designImageUrl}
-          alt="Uploaded design"
-          className="absolute"
+          alt="Uploaded design preview"
+          draggable={false}
+          className="absolute select-none"
           style={{
             left: `${positionX}%`,
             top: `${positionY}%`,

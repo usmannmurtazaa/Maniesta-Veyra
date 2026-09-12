@@ -108,21 +108,153 @@ export class AdminService {
     });
   }
 
-  async updateProduct(id: string, input: any) {
-    return prisma.product.update({
-      where: { id },
-      data: {
-        name: input.name,
-        slug: input.slug,
-        description: input.description,
-        categoryId: input.categoryId,
-        basePrice: new Prisma.Decimal(input.basePrice),
-        compareAtPrice: input.compareAtPrice ? new Prisma.Decimal(input.compareAtPrice) : null,
-        skuPrefix: input.skuPrefix,
-        tags: input.tags || [],
-        material: input.material,
-        careInstructions: input.careInstructions,
-      },
+    async updateProduct(
+    id: string,
+    input: {
+      name: string;
+      slug: string;
+      description: string;
+      categoryId: string;
+      basePrice: number;
+      compareAtPrice?: number | null;
+      skuPrefix: string;
+      tags: string[];
+      material?: string;
+      careInstructions?: string;
+      images?: { url: string; altText?: string; isPrimary?: boolean }[];
+      newColors?: { name: string; hexCode: string }[];
+      newSizes?: { label: string }[];
+    }
+  ) {
+    return prisma.$transaction(async (tx) => {
+      // 1. Update scalar fields
+      const product = await tx.product.update({
+        where: { id },
+        data: {
+          name: input.name,
+          slug: input.slug,
+          description: input.description,
+          categoryId: input.categoryId,
+          basePrice: new Prisma.Decimal(input.basePrice),
+          compareAtPrice:
+            input.compareAtPrice != null
+              ? new Prisma.Decimal(input.compareAtPrice)
+              : null,
+          skuPrefix: input.skuPrefix,
+          tags: input.tags,
+          material: input.material,
+          careInstructions: input.careInstructions,
+        },
+      });
+
+      // 2. Replace images if provided (delete all + recreate).
+      //    Images don't interact with variants, so this is safe.
+      if (input.images !== undefined) {
+        await tx.productImage.deleteMany({ where: { productId: id } });
+        if (input.images.length > 0) {
+          await tx.productImage.createMany({
+            data: input.images.map((img, i) => ({
+              productId: id,
+              url: img.url,
+              altText: img.altText ?? null,
+              isPrimary: img.isPrimary ?? i === 0,
+              sortOrder: i,
+            })),
+          });
+        }
+      }
+
+      // 3. Add new colors (skip duplicates by name) and create variants
+      //    for all existing sizes with stock 0. Admin sets stock later via
+      //    the inventory page.
+      if (input.newColors && input.newColors.length > 0) {
+        const existingColors = await tx.productColor.findMany({
+          where: { productId: id },
+          select: { name: true },
+        });
+        const existingNames = new Set(existingColors.map((c) => c.name));
+        const existingSizes = await tx.productSize.findMany({
+          where: { productId: id },
+          orderBy: { sortOrder: 'asc' },
+        });
+
+        for (const newColor of input.newColors) {
+          if (existingNames.has(newColor.name)) continue;
+
+          const createdColor = await tx.productColor.create({
+            data: {
+              productId: id,
+              name: newColor.name,
+              hexCode: newColor.hexCode,
+            },
+          });
+
+          // Create variants for each existing size
+          for (const size of existingSizes) {
+            const sku = `${input.skuPrefix}-${newColor.name.replace(/\s+/g, '').slice(0, 3).toUpperCase()}-${size.label}`;
+            // Skip if SKU already exists (defensive)
+            const existing = await tx.productVariant.findUnique({ where: { sku } });
+            if (existing) continue;
+
+            await tx.productVariant.create({
+              data: {
+                productId: id,
+                colorId: createdColor.id,
+                sizeId: size.id,
+                sku,
+                stock: 0,
+                lowStockThreshold: 5,
+                isActive: true,
+              },
+            });
+          }
+        }
+      }
+
+      // 4. Add new sizes (skip duplicates by label) and create variants
+      //    for all existing colors with stock 0.
+      if (input.newSizes && input.newSizes.length > 0) {
+        const existingSizes = await tx.productSize.findMany({
+          where: { productId: id },
+          select: { label: true },
+        });
+        const existingLabels = new Set(existingSizes.map((s) => s.label));
+        const existingColors = await tx.productColor.findMany({
+          where: { productId: id },
+          orderBy: { sortOrder: 'asc' },
+        });
+
+        for (const newSize of input.newSizes) {
+          if (existingLabels.has(newSize.label)) continue;
+
+          const createdSize = await tx.productSize.create({
+            data: {
+              productId: id,
+              label: newSize.label,
+            },
+          });
+
+          for (const color of existingColors) {
+            const sku = `${input.skuPrefix}-${color.name.replace(/\s+/g, '').slice(0, 3).toUpperCase()}-${newSize.label}`;
+            const existing = await tx.productVariant.findUnique({ where: { sku } });
+            if (existing) continue;
+
+            await tx.productVariant.create({
+              data: {
+                productId: id,
+                colorId: color.id,
+                sizeId: createdSize.id,
+                sku,
+                stock: 0,
+                lowStockThreshold: 5,
+                isActive: true,
+              },
+            });
+          }
+        }
+      }
+
+      return product;
     });
   }
 
@@ -444,24 +576,141 @@ export class AdminService {
     });
   }
 
-  async updateGarment(id: string, input: any) {
-    return prisma.garment.update({
-      where: { id },
-      data: {
-        name: input.name,
-        slug: input.slug,
-        description: input.description,
-        basePrice: new Prisma.Decimal(input.basePrice),
-        skuPrefix: input.skuPrefix,
-        supportedPrintLocations: input.supportedPrintLocations,
-        printableAreaWidth: input.printableAreaWidth ? new Prisma.Decimal(input.printableAreaWidth) : null,
-        printableAreaHeight: input.printableAreaHeight ? new Prisma.Decimal(input.printableAreaHeight) : null,
-        sortOrder: input.sortOrder,
-        isActive: input.isActive,
-      },
+    async updateGarment(
+    id: string,
+    input: {
+      name: string;
+      slug: string;
+      description?: string;
+      basePrice: number;
+      skuPrefix: string;
+      supportedPrintLocations: string[];
+      printableAreaWidth?: number;
+      printableAreaHeight?: number;
+      sortOrder: number;
+      isActive: boolean;
+      newColors?: { name: string; hexCode: string }[];
+      newSizes?: { label: string }[];
+    }
+  ) {
+    return prisma.$transaction(async (tx) => {
+      // 1. Update scalar fields
+      const garment = await tx.garment.update({
+        where: { id },
+        data: {
+          name: input.name,
+          slug: input.slug,
+          description: input.description,
+          basePrice: new Prisma.Decimal(input.basePrice),
+          skuPrefix: input.skuPrefix,
+          supportedPrintLocations: input.supportedPrintLocations as any,
+          printableAreaWidth:
+            input.printableAreaWidth != null
+              ? new Prisma.Decimal(input.printableAreaWidth)
+              : null,
+          printableAreaHeight:
+            input.printableAreaHeight != null
+              ? new Prisma.Decimal(input.printableAreaHeight)
+              : null,
+          sortOrder: input.sortOrder,
+          isActive: input.isActive,
+        },
+      });
+
+      // 2. Add new colors — skip duplicates by name, create variants
+      //    for all existing sizes with stock 0.
+      if (input.newColors && input.newColors.length > 0) {
+        const existingColors = await tx.garmentColor.findMany({
+          where: { garmentId: id },
+          select: { name: true },
+        });
+        const existingNames = new Set(existingColors.map((c) => c.name));
+        const existingSizes = await tx.garmentSize.findMany({
+          where: { garmentId: id },
+          orderBy: { sortOrder: 'asc' },
+        });
+
+        for (const newColor of input.newColors) {
+          if (existingNames.has(newColor.name)) continue;
+
+          const createdColor = await tx.garmentColor.create({
+            data: {
+              garmentId: id,
+              name: newColor.name,
+              hexCode: newColor.hexCode,
+            },
+          });
+
+          for (const size of existingSizes) {
+            const sku = `${input.skuPrefix}-${newColor.name.replace(/\s+/g, '').slice(0, 3).toUpperCase()}-${size.label}`;
+            const existing = await tx.garmentVariant.findUnique({
+              where: { sku },
+            });
+            if (existing) continue;
+
+            await tx.garmentVariant.create({
+              data: {
+                garmentId: id,
+                colorId: createdColor.id,
+                sizeId: size.id,
+                sku,
+                stock: 0,
+                lowStockThreshold: 5,
+                isActive: true,
+              },
+            });
+          }
+        }
+      }
+
+      // 3. Add new sizes — same pattern.
+      if (input.newSizes && input.newSizes.length > 0) {
+        const existingSizes = await tx.garmentSize.findMany({
+          where: { garmentId: id },
+          select: { label: true },
+        });
+        const existingLabels = new Set(existingSizes.map((s) => s.label));
+        const existingColors = await tx.garmentColor.findMany({
+          where: { garmentId: id },
+          orderBy: { sortOrder: 'asc' },
+        });
+
+        for (const newSize of input.newSizes) {
+          if (existingLabels.has(newSize.label)) continue;
+
+          const createdSize = await tx.garmentSize.create({
+            data: {
+              garmentId: id,
+              label: newSize.label,
+            },
+          });
+
+          for (const color of existingColors) {
+            const sku = `${input.skuPrefix}-${color.name.replace(/\s+/g, '').slice(0, 3).toUpperCase()}-${newSize.label}`;
+            const existing = await tx.garmentVariant.findUnique({
+              where: { sku },
+            });
+            if (existing) continue;
+
+            await tx.garmentVariant.create({
+              data: {
+                garmentId: id,
+                colorId: color.id,
+                sizeId: createdSize.id,
+                sku,
+                stock: 0,
+                lowStockThreshold: 5,
+                isActive: true,
+              },
+            });
+          }
+        }
+      }
+
+      return garment;
     });
   }
-
+  
   // ---------- PRINT PRICING ----------
 async getPrintPricing(garmentId: string) {
   return prisma.printPricing.findMany({

@@ -21,11 +21,11 @@ export const metadata = {
 
 export default function ContactPage() {
   const serverEnv = getServerEnv();
-  const supportEmail = serverEnv.EMAIL_FROM;
+  const supportEmail = serverEnv.EMAIL_FROM ?? 'orders@maniestaveyra.com';
 
   return (
     <>
-      <ContactPageJsonLd />
+      <ContactPageJsonLd supportEmail={supportEmail} />
       <main>
         {/* Hero */}
         <section className="bg-mv-dark text-mv-inverse">
@@ -65,11 +65,15 @@ export default function ContactPage() {
                       Contact Information
                     </h2>
                     <div className="mt-4 space-y-2 text-mv-text-secondary">
-                      {supportEmail && (
-                        <p>
-                          <strong>Email:</strong> <a href={`mailto:${supportEmail}`} className="hover:text-mv-accent">{supportEmail}</a>
-                        </p>
-                      )}
+                      <p>
+                        <strong>Email:</strong>{' '}
+                        <a
+                          href={`mailto:${supportEmail}`}
+                          className="hover:text-mv-accent"
+                        >
+                          {supportEmail}
+                        </a>
+                      </p>
                       <p>
                         <strong>Hours:</strong> Monday – Saturday, 10:00 AM – 7:00 PM (PKT)
                       </p>

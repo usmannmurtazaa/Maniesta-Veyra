@@ -1,156 +1,136 @@
-import { Container, Section, PageHeader } from '@/components/layout';
-import { Reveal } from '@/components/shared/reveal';
-import { publicEnv } from '@/lib/env';
+import { Container, Section } from '@/components/layout';
+import { SectionHeading } from '@/components/shared/section-heading';
 
 export const metadata = {
-  title: 'Terms & Conditions | Maniesta Veyra',
+  title: 'Terms of Service | Maniesta Veyra',
   description:
-    'Terms and conditions governing the use of Maniesta Veyra website and services.',
-  openGraph: {
-    title: 'Terms & Conditions | Maniesta Veyra',
-    description: 'Terms of use for Maniesta Veyra.',
-    url: `${publicEnv.NEXT_PUBLIC_APP_URL}/terms`,
-    type: 'website',
-  },
+    'Terms and conditions for shopping with and using the Maniesta Veyra website.',
 };
 
 export default function TermsPage() {
   return (
-    <main>
-      <section className="bg-mv-dark text-mv-inverse">
-        <Container className="py-20 md:py-28">
-          <Reveal>
-            <PageHeader
-              title="Terms & Conditions"
-              subtitle="Please read these terms carefully"
-            />
-          </Reveal>
-        </Container>
-      </section>
+    <Section>
+      <Container>
+        <div className="mx-auto max-w-3xl">
+          <SectionHeading
+            eyebrow="Legal"
+            title="Terms of service"
+            subtitle="Last updated: December 2025"
+          />
 
-      <Section>
-        <Container className="max-w-3xl space-y-10">
-          <Reveal>
-            <div>
-              <h2 className="font-display text-2xl md:text-3xl font-bold text-mv-text">
-                Account Usage
-              </h2>
-              <p className="mt-3 text-mv-text-secondary">
-                You are responsible for maintaining the confidentiality of your account
-                credentials and for all activities that occur under your account. Provide
-                accurate and current information and notify us immediately of any unauthorized
-                use.
-              </p>
-            </div>
-          </Reveal>
+          <div className="prose prose-neutral mt-10 max-w-none">
+            <p className="text-mv-text-secondary">
+              These terms govern your use of the Maniesta Veyra website and any
+              purchase you make through it. By using the site you agree to them.
+            </p>
 
-          <Reveal>
-            <div>
-              <h2 className="font-display text-2xl md:text-3xl font-bold text-mv-text">
-                Products and Pricing
-              </h2>
-              <p className="mt-3 text-mv-text-secondary">
-                We strive to display accurate product images, descriptions, and prices.
-                However, minor variations may occur. Prices are subject to change without
-                notice. All prices are listed in Pakistani Rupees (PKR) unless otherwise stated.
-              </p>
-            </div>
-          </Reveal>
+            <h2 className="mt-10 font-display text-xl font-bold text-mv-text">
+              1. Your account
+            </h2>
+            <p className="mt-3 text-mv-text-secondary">
+              You are responsible for keeping your account password secure and
+              for any activity that happens under your account. If you believe
+              your account has been compromised, contact us immediately.
+            </p>
 
-          <Reveal>
-            <div>
-              <h2 className="font-display text-2xl md:text-3xl font-bold text-mv-text">
-                Orders and Payments
-              </h2>
-              <p className="mt-3 text-mv-text-secondary">
-                By placing an order, you agree to pay the total amount shown at checkout.
-                We accept Cash on Delivery, bank transfer, and other payment methods as
-                displayed. Your order is confirmed only after payment verification (where
-                applicable) and stock availability.
-              </p>
-            </div>
-          </Reveal>
+            <h2 className="mt-10 font-display text-xl font-bold text-mv-text">
+              2. Orders and pricing
+            </h2>
+            <p className="mt-3 text-mv-text-secondary">
+              All prices are listed in Pakistani Rupees (PKR) and include
+              applicable taxes unless stated otherwise. We reserve the right to
+              cancel an order if a product is out of stock, if a pricing error
+              has occurred, or if we suspect fraud. If we cancel your order, we
+              will notify you and any payment made will be refunded in full.
+            </p>
 
-          <Reveal>
-            <div>
-              <h2 className="font-display text-2xl md:text-3xl font-bold text-mv-text">
-                Cancellations
-              </h2>
-              <p className="mt-3 text-mv-text-secondary">
-                Orders may be cancelled before they are processed. Custom orders can only be
-                cancelled while in PENDING_REVIEW status. Once production begins, cancellation
-                is not possible.
-              </p>
-            </div>
-          </Reveal>
+            <h2 className="mt-10 font-display text-xl font-bold text-mv-text">
+              3. Shipping
+            </h2>
+            <p className="mt-3 text-mv-text-secondary">
+              Delivery times shown on the site are estimates. We are not
+              responsible for delays caused by courier partners, weather, or
+              circumstances outside our control.
+            </p>
 
-          <Reveal>
-            <div>
-              <h2 className="font-display text-2xl md:text-3xl font-bold text-mv-text">
-                Custom Designs and Artwork
-              </h2>
-              <p className="mt-3 text-mv-text-secondary">
-                You retain ownership of the artwork you upload. By submitting a design, you
-                grant us a limited license to print it solely for your order. You confirm that
-                you have the right to use the artwork and that it does not infringe on any
-                third-party rights.
-              </p>
-            </div>
-          </Reveal>
+            <h2 className="mt-10 font-display text-xl font-bold text-mv-text">
+              4. Returns
+            </h2>
+            <p className="mt-3 text-mv-text-secondary">
+              Returns are governed by our Returns & Exchanges policy. Custom-
+              printed items cannot be returned unless defective. Please review
+              the design carefully in the customizer before ordering.
+            </p>
 
-          <Reveal>
-            <div>
-              <h2 className="font-display text-2xl md:text-3xl font-bold text-mv-text">
-                Prohibited Content
-              </h2>
-              <p className="mt-3 text-mv-text-secondary">
-                You may not upload or request printing of content that is unlawful, defamatory,
-                obscene, hateful, or infringes on intellectual property rights. We reserve the
-                right to refuse any custom order that violates these terms.
-              </p>
-            </div>
-          </Reveal>
+            <h2 className="mt-10 font-display text-xl font-bold text-mv-text">
+              5. Custom designs
+            </h2>
+            <p className="mt-3 text-mv-text-secondary">
+              By uploading a design to our custom print studio, you confirm
+              that you own the rights to the artwork or have permission from the
+              rights holder to have it printed. You agree not to upload
+              content that is:
+            </p>
+            <ul className="mt-3 space-y-2 text-mv-text-secondary list-disc pl-6">
+              <li>Infringing on anyone else&rsquo;s intellectual property.</li>
+              <li>Hateful, threatening, defamatory, or obscene.</li>
+              <li>Illegal in Pakistan or the country where the item ships.</li>
+            </ul>
+            <p className="mt-3 text-mv-text-secondary">
+              We reserve the right to refuse to print any order that violates
+              these rules.
+            </p>
 
-          <Reveal>
-            <div>
-              <h2 className="font-display text-2xl md:text-3xl font-bold text-mv-text">
-                Refunds
-              </h2>
-              <p className="mt-3 text-mv-text-secondary">
-                Refund eligibility is described in our Returns Policy. Custom printed items are
-                non-refundable except in cases of manufacturing defects or errors on our part.
-              </p>
-            </div>
-          </Reveal>
+            <h2 className="mt-10 font-display text-xl font-bold text-mv-text">
+              6. Website use
+            </h2>
+            <p className="mt-3 text-mv-text-secondary">
+              You agree not to abuse the site — including attempts to breach
+              security, scrape pricing or inventory, place fraudulent orders, or
+              interfere with other users. Accounts that violate these terms may
+              be suspended.
+            </p>
 
-          <Reveal>
-            <div>
-              <h2 className="font-display text-2xl md:text-3xl font-bold text-mv-text">
-                Liability
-              </h2>
-              <p className="mt-3 text-mv-text-secondary">
-                To the fullest extent permitted by law, Maniesta Veyra shall not be liable for
-                indirect or consequential damages arising from the use of our website or
-                products. Our total liability is limited to the amount paid for the specific
-                product.
-              </p>
-            </div>
-          </Reveal>
+            <h2 className="mt-10 font-display text-xl font-bold text-mv-text">
+              7. Intellectual property
+            </h2>
+            <p className="mt-3 text-mv-text-secondary">
+              All content on this site — including the brand name, logos,
+              product photography, and copy — is owned by Maniesta Veyra unless
+              stated otherwise. You may not reuse it without permission.
+            </p>
 
-          <Reveal>
-            <div>
-              <h2 className="font-display text-2xl md:text-3xl font-bold text-mv-text">
-                Policy Changes
-              </h2>
-              <p className="mt-3 text-mv-text-secondary">
-                We may update these terms from time to time. The latest version will always be
-                available on this page. Continued use of our services after changes constitutes
-                acceptance of the revised terms.
-              </p>
-            </div>
-          </Reveal>
-        </Container>
-      </Section>
-    </main>
+            <h2 className="mt-10 font-display text-xl font-bold text-mv-text">
+              8. Liability
+            </h2>
+            <p className="mt-3 text-mv-text-secondary">
+              Our liability for any order is limited to the amount you paid for
+              that order. We are not liable for indirect losses such as
+              missed opportunities or consequential damages.
+            </p>
+
+            <h2 className="mt-10 font-display text-xl font-bold text-mv-text">
+              9. Changes to these terms
+            </h2>
+            <p className="mt-3 text-mv-text-secondary">
+              We may update these terms from time to time. The date at the top
+              of this page reflects the most recent version. Continuing to use
+              the site after changes means you accept them.
+            </p>
+
+            <h2 className="mt-10 font-display text-xl font-bold text-mv-text">
+              10. Contact
+            </h2>
+            <p className="mt-3 text-mv-text-secondary">
+              Questions about these terms? Email{' '}
+              <a href="mailto:orders@maniestaveyra.com" className="text-mv-accent underline-offset-4 hover:underline">
+                orders@maniestaveyra.com
+              </a>
+              .
+            </p>
+          </div>
+        </div>
+      </Container>
+    </Section>
   );
 }

@@ -1,26 +1,48 @@
 'use client';
 
-import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
-import { Button } from '@/components/ui/button';
+import { useState } from 'react';
 import { SlidersHorizontal } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import { ShopFilters } from './shop-filters';
 
 interface FilterDrawerProps {
-  children: React.ReactNode;
-  triggerLabel?: string;
+  categories: { id: string; name: string; slug: string }[];
 }
 
-export function FilterDrawer({ children, triggerLabel = 'Filters' }: FilterDrawerProps) {
+export function FilterDrawer({ categories }: FilterDrawerProps) {
+  const [open, setOpen] = useState(false);
+
   return (
-    <Drawer>
-      <DrawerTrigger asChild>
-        <Button variant="outline" className="lg:hidden">
-          <SlidersHorizontal className="h-4 w-4 mr-2" />
-          {triggerLabel}
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <Button variant="outline" size="sm" className="gap-2">
+          <SlidersHorizontal className="h-4 w-4" />
+          Filters
         </Button>
-      </DrawerTrigger>
-      <DrawerContent className="p-4">
-        <div className="space-y-6">{children}</div>
-      </DrawerContent>
-    </Drawer>
+      </SheetTrigger>
+      <SheetContent
+        side="bottom"
+        className="h-[85vh] rounded-t-2xl flex flex-col"
+      >
+        <SheetHeader className="border-b border-mv-border pb-4">
+          <SheetTitle>Filters</SheetTitle>
+        </SheetHeader>
+        <div className="flex-1 overflow-y-auto py-4">
+          <ShopFilters categories={categories} />
+        </div>
+        <div className="border-t border-mv-border pt-4">
+          <Button className="w-full" size="lg" onClick={() => setOpen(false)}>
+            Apply
+          </Button>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }

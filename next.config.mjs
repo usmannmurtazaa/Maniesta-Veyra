@@ -18,11 +18,13 @@ const cspDirectives = [
   `font-src 'self' data: https://fonts.gstatic.com`,
   // Inline styles are required by Next.js and Radix UI
   `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
-  // Inline scripts are required by Next.js runtime; Google Analytics; Vercel Analytics
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} https://www.googletagmanager.com https://www.google-analytics.com https://va.vercel-scripts.com`,
-  // API calls + Upstash + GA + Blob
-  `connect-src 'self' https://www.google-analytics.com https://*.blob.vercel-storage.com https://*.upstash.io${isDev ? ' ws: http://localhost:*' : ''}`,
-  // Stripe checkout (only loaded when user selects ONLINE payment)
+  // Inline scripts are required by Next.js runtime; GA; Stripe.js (optional)
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} https://www.googletagmanager.com https://www.google-analytics.com https://js.stripe.com`,
+  // API calls + Upstash + GA + Blob + Sentry + Stripe (optional)
+  // Sentry's ingest endpoint is per-org: https://o<org>.ingest.sentry.io
+  // The wildcard covers sentry.io SaaS; if you self-host Sentry, replace with your domain.
+  `connect-src 'self' https://*.google-analytics.com https://*.blob.vercel-storage.com https://*.upstash.io https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://*.ingest.de.sentry.io https://api.stripe.com${isDev ? ' ws: http://localhost:*' : ''}`,
+  // Stripe checkout iframe (optional)
   `frame-src 'self' https://checkout.stripe.com https://js.stripe.com`,
   `form-action 'self'`,
   `base-uri 'self'`,
@@ -38,7 +40,7 @@ const nextConfig = {
   compress: true,
   productionBrowserSourceMaps: false,
 
-  // Next 15 native replacement for webpack externals for Konva.
+  // Next 15 native replacement for webpack externals.
   serverExternalPackages: [
     'konva',
     'react-konva',
@@ -80,7 +82,6 @@ const nextConfig = {
           { key: 'Content-Security-Policy', value: cspDirectives },
         ],
       },
-      // Cache-Control for static assets (Next already sets some, but explicit is safer)
       {
         source: '/icons/:path*',
         headers: [
@@ -91,9 +92,9 @@ const nextConfig = {
   },
 
   webpack: (config, { isServer, nextRuntime }) => {
-    // Belt-and-suspenders: also alias `canvas` in case any dep does
-    // require('canvas') at module load time. serverExternalPackages above
-    // handles the module resolution; this handles the import path.
+    // Belt-and-suspenders: alias `canvas` in case any dep requires it at
+    // module load time. serverExternalPackages handles resolution; this
+    // handles the import path.
     if (isServer) {
       config.resolve.alias = {
         ...config.resolve.alias,
@@ -103,7 +104,7 @@ const nextConfig = {
 
     // Silence jose's CompressionStream/DecompressionStream warnings in the
     // Edge runtime. Auth.js does not use JWE compression by default, so the
-    // flagged code path never executes — the warning is informational only.
+    // flagged code path never executes.
     if (nextRuntime === 'edge') {
       config.ignoreWarnings = [
         ...(config.ignoreWarnings ?? []),
@@ -144,8 +145,6 @@ if (hasSentryDsn) {
     silent: !hasSentryToken,
 
     // Prevent the clientReferenceManifest build conflict in Next 15.
-    // Disabling the webpack plugins when we cannot upload source maps
-    // is the actual fix, not a workaround.
     disableServerWebpackPlugin: !hasSentryToken,
     disableClientWebpackPlugin: !hasSentryToken,
 
@@ -157,7 +156,6 @@ if (hasSentryDsn) {
     },
 
     // v10: replaces the deprecated `disableLogger`.
-    // Treeshakes Sentry debug logging from the production bundle.
     webpack: {
       treeshake: {
         removeDebugLogging: true,

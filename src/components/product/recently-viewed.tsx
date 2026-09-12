@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ProductCardClient } from './product-card-client';
 import { ProductGrid } from './product-grid';
 
 interface RecentlyViewedProduct {

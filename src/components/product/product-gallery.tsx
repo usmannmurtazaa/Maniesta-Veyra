@@ -10,35 +10,56 @@ interface ProductGalleryProps {
 
 export function ProductGallery({ images }: ProductGalleryProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const selectedImage = images[selectedIndex];
+  const selected = images[selectedIndex];
+
+  if (images.length === 0) {
+    return (
+      <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-mv-bg-alt">
+        <div className="flex h-full items-center justify-center text-sm text-mv-muted">
+          No image available
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-4">
-      <div className="relative aspect-square bg-mv-bg-alt rounded-lg overflow-hidden">
-        {selectedImage ? (
-          <Image
-            src={selectedImage.url}
-            alt={selectedImage.altText || 'Product image'}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 50vw"
-          />
-        ) : (
-          <div className="flex items-center justify-center h-full text-mv-muted">No image</div>
-        )}
+    <div className="space-y-3">
+      {/* Main image */}
+      <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-mv-bg-alt">
+        <Image
+          src={selected.url}
+          alt={selected.altText ?? 'Product image'}
+          fill
+          priority
+          sizes="(max-width: 768px) 100vw, 50vw"
+          className="object-cover"
+        />
       </div>
+
+      {/* Thumbnails — horizontally scrollable on mobile */}
       {images.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto">
+        <div className="flex gap-2 overflow-x-auto scrollbar-hidden pb-1">
           {images.map((img, i) => (
             <button
               key={img.id}
+              type="button"
               onClick={() => setSelectedIndex(i)}
               className={cn(
-                'relative h-20 w-20 shrink-0 overflow-hidden rounded-md border',
-                i === selectedIndex ? 'border-mv-primary' : 'border-mv-border'
+                'relative h-16 w-16 shrink-0 overflow-hidden rounded-md border-2 transition md:h-20 md:w-20',
+                i === selectedIndex
+                  ? 'border-mv-primary'
+                  : 'border-transparent hover:border-mv-border'
               )}
+              aria-label={`View image ${i + 1}`}
+              aria-pressed={i === selectedIndex}
             >
-              <Image src={img.url} alt={img.altText || ''} fill className="object-cover" />
+              <Image
+                src={img.url}
+                alt={img.altText ?? ''}
+                fill
+                sizes="80px"
+                className="object-cover"
+              />
             </button>
           ))}
         </div>

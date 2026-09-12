@@ -12,9 +12,12 @@ interface ProductCardClientProps {
   price: number;
   compareAtPrice?: number;
   imageUrl?: string;
+  secondaryImageUrl?: string;
+  categoryName?: string;
   badge?: string;
   rating?: number;
   ratingCount?: number;
+  inStock?: boolean;
   isWishlisted?: boolean;
 }
 
@@ -25,72 +28,66 @@ export function ProductCardClient({
   price,
   compareAtPrice,
   imageUrl,
+  secondaryImageUrl,
+  categoryName,
   badge,
   rating,
   ratingCount,
+  inStock = true,
   isWishlisted = false,
 }: ProductCardClientProps) {
   const router = useRouter();
   const [wishlisted, setWishlisted] = useState(isWishlisted);
-  const [loading, setLoading] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  const toggleWishlist = async () => {
-    setLoading(true);
+  async function toggleWishlist() {
+    if (isUpdating) return;
+    setIsUpdating(true);
     try {
       const method = wishlisted ? 'DELETE' : 'POST';
       const url = wishlisted ? `/api/wishlist/${id}` : '/api/wishlist';
-      const response = await fetch(url, {
+      const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: method === 'POST' ? JSON.stringify({ productId: id }) : undefined,
       });
-      if (response.ok) {
+      if (res.ok) {
         setWishlisted(!wishlisted);
         toast({
           title: wishlisted ? 'Removed from wishlist' : 'Added to wishlist',
-          variant: 'default',
         });
         router.refresh();
       } else {
-        const result = await response.json();
+        const result = await res.json().catch(() => null);
         toast({
-          title: 'Error',
-          description: result.error?.message || 'Failed to update wishlist',
+          title: 'Could not update wishlist',
+          description: result?.error?.message ?? 'Please sign in and try again.',
           variant: 'destructive',
         });
       }
     } catch {
-      toast({
-        title: 'Error',
-        description: 'Network error',
-        variant: 'destructive',
-      });
+      toast({ title: 'Network error', variant: 'destructive' });
     } finally {
-      setLoading(false);
+      setIsUpdating(false);
     }
-  };
+  }
 
   return (
     <ProductCard
-      id={id}
-      slug={slug}
       name={name}
       price={price}
       compareAtPrice={compareAtPrice}
       imageUrl={imageUrl}
+      secondaryImageUrl={secondaryImageUrl}
+      categoryName={categoryName}
       badge={badge}
       rating={rating}
       ratingCount={ratingCount}
+      inStock={inStock}
       isWishlisted={wishlisted}
       onWishlist={toggleWishlist}
       onQuickView={() => router.push(`/products/${slug}`)}
-      onAddToCart={() => {
-        // Cart functionality will be implemented in Phase 6
-        toast({
-          title: 'Cart coming soon',
-          description: 'Cart functionality will be available shortly.',
-        });
-      }}
+      onAddToCart={() => router.push(`/products/${slug}`)}
     />
   );
 }

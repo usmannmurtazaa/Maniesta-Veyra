@@ -6,6 +6,7 @@ import { CartSummary } from './cart-summary';
 import { useCartStore } from '@/stores/cart-store';
 import { Button } from '@/components/ui/button';
 import { useEffect } from 'react';
+import Link from 'next/link';
 
 interface CartDrawerProps {
   open: boolean;
@@ -33,20 +34,20 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                 : Number(item.customDesign?.unitPrice ?? 0),
               product: item.productVariant
                 ? {
-                    name: item.productVariant.product.name,
-                    slug: item.productVariant.product.slug,
-                    imageUrl: item.productVariant.product.images[0]?.url,
-                    color: item.productVariant.color.name,
-                    size: item.productVariant.size.label,
-                  }
+                  name: item.productVariant.product.name,
+                  slug: item.productVariant.product.slug,
+                  imageUrl: item.productVariant.product.images[0]?.url,
+                  color: item.productVariant.color.name,
+                  size: item.productVariant.size.label,
+                }
                 : undefined,
               customDesign: item.customDesign
                 ? {
-                    garmentName: item.customDesign.garment.name,
-                    color: item.customDesign.color.name,
-                    size: item.customDesign.size.label,
-                    previewImageUrl: item.customDesign.previewImageUrl,
-                  }
+                  garmentName: item.customDesign.garment.name,
+                  color: item.customDesign.color.name,
+                  size: item.customDesign.size.label,
+                  previewImageUrl: item.customDesign.previewImageUrl,
+                }
                 : undefined,
             }));
             setCart(transformedItems);
@@ -74,9 +75,11 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
         {items.length > 0 && (
           <div className="border-t border-mv-border pt-4">
             <CartSummary />
-            <Button className="w-full mt-4" size="lg">
-              Proceed to Checkout
-            </Button>
+            <Link href="/checkout" onClick={() => onOpenChange(false)} className="block mt-4">
+              <Button className="w-full" size="lg">
+                Proceed to Checkout
+              </Button>
+            </Link>
           </div>
         )}
       </SheetContent>

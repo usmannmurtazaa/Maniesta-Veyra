@@ -1,176 +1,156 @@
-import { Container, Section, PageHeader } from '@/components/layout';
-import { Reveal } from '@/components/shared/reveal';
-import { Accordion } from '@/components/shared/accordion';
-import { FaqJsonLd } from '@/components/seo/faq-json-ld';
-import { publicEnv } from '@/lib/env';
+import { Container, Section } from '@/components/layout';
+import { SectionHeading } from '@/components/shared/section-heading';
+import Link from 'next/link';
 
 export const metadata = {
   title: 'FAQ | Maniesta Veyra',
   description:
-    'Frequently asked questions about orders, shipping, returns, payments, custom print studio, and more.',
-  openGraph: {
-    title: 'FAQ | Maniesta Veyra',
-    description: 'Answers to common questions about Maniesta Veyra.',
-    url: `${publicEnv.NEXT_PUBLIC_APP_URL}/faq`,
-    type: 'website',
-  },
+    'Answers to common questions about orders, sizing, shipping, returns, and custom printing.',
 };
 
-const faqSections = [
+const FAQ_SECTIONS = [
   {
-    category: 'Orders',
+    title: 'Orders & Payment',
     questions: [
       {
-        question: 'How do I place an order?',
-        answer:
-          'Browse our store or Custom Print Studio, add items to your cart, and proceed to checkout. Follow the steps to enter your shipping details and select a payment method.',
+        q: 'How do I place an order?',
+        a: 'Browse the shop, select a product, choose your size and color, and add it to your cart. When you are ready, head to checkout and choose your preferred payment method. We accept cash on delivery and bank transfer across Pakistan.',
       },
       {
-        question: 'Can I modify my order after placing it?',
-        answer:
-          'Modifications are possible only before the order enters processing. Contact support as soon as possible for assistance.',
+        q: 'What payment methods do you accept?',
+        a: 'We accept Cash on Delivery (COD) and Bank Transfer. Online card payments are coming soon. If you need a different arrangement, contact us and we will work with you.',
+      },
+      {
+        q: 'Can I modify or cancel my order?',
+        a: 'You can cancel a pending order from your account before it enters processing. Once production has started, orders can no longer be cancelled. Reach out to us as soon as possible if you need to make a change.',
       },
     ],
   },
   {
-    category: 'Shipping',
+    title: 'Sizing & Fit',
     questions: [
       {
-        question: 'How long does delivery take?',
-        answer:
-          'Ready-made items usually arrive in 2–7 business days. Custom orders require additional production time (3–5 business days) before shipping.',
+        q: 'What sizes do you offer?',
+        a: 'Drop shoulder shirts are available in S, M, L, XL, and XXL, depending on the design. Size availability is shown on each product page.',
       },
       {
-        question: 'Do you offer tracking?',
-        answer:
-          'Yes, tracking details are shared via email or SMS once your order has shipped.',
+        q: 'How do I know my size?',
+        a: 'Our drop shoulder shirts have a relaxed fit. If you normally wear M in a regular-fit tee, we recommend the same size for drop shoulder pieces — the shoulder seam sits lower by design. If you prefer an even looser fit, size up.',
+      },
+      {
+        q: 'Do the shirts shrink after washing?',
+        a: 'Our shirts are pre-shrunk, but a small amount of shrinkage is normal with cotton. To keep the fit and color stable, wash cold and air dry when possible.',
       },
     ],
   },
   {
-    category: 'Returns & Refunds',
+    title: 'Shipping & Delivery',
     questions: [
       {
-        question: 'Can I return a custom printed item?',
-        answer:
-          'Custom printed items are made to order and cannot be returned unless there is a manufacturing defect or error on our part.',
+        q: 'How long does delivery take?',
+        a: 'We ship across Pakistan with delivery typically within 3–5 business days. Larger cities are usually faster.',
       },
       {
-        question: 'What is the return window for ready-made items?',
-        answer:
-          'Ready-made items can be returned within the period stated in your order confirmation, provided they are unworn and in original packaging.',
+        q: 'Do you ship internationally?',
+        a: 'Not yet. We currently ship within Pakistan. If you would like to order from outside Pakistan, contact us and we will try to help.',
+      },
+      {
+        q: 'How much does shipping cost?',
+        a: 'Shipping is calculated at checkout. Orders over a threshold ship free — the exact threshold is shown in your cart.',
       },
     ],
   },
   {
-    category: 'Payments',
+    title: 'Returns & Exchanges',
     questions: [
       {
-        question: 'What payment methods do you accept?',
-        answer:
-          'We accept Cash on Delivery and bank transfer. Online payment may be available depending on your location.',
+        q: 'What is your return policy?',
+        a: 'Unworn items can be exchanged within 14 days of delivery. Please keep the tags attached and the packaging intact. Custom-printed items cannot be returned unless there is a printing defect.',
       },
       {
-        question: 'Is my payment information secure?',
-        answer:
-          'Yes, all payment information is processed securely by our payment partners and is never stored on our servers.',
+        q: 'How do I start an exchange?',
+        a: 'Contact us at orders@maniestaveyra.com with your order number and a short description of the issue. We will guide you through the next steps.',
       },
     ],
   },
   {
-    category: 'Custom Print Studio',
+    title: 'Custom Print Studio',
     questions: [
       {
-        question: 'How does the custom print studio work?',
-        answer:
-          'Choose a garment, color, and size, then upload your design. Use the editor to position and resize it, preview the result, and add to cart.',
+        q: 'What can I print on a shirt?',
+        a: 'You can upload your own artwork — logos, illustrations, photos, or text. We print using direct-to-garment (DTG) for small runs and screen printing for larger orders.',
       },
       {
-        question: 'Can I use multiple print locations?',
-        answer:
-          'Yes, you can select front, back, left sleeve, or right sleeve, and upload different artwork for each location.',
-      },
-    ],
-  },
-  {
-    category: 'Artwork/Uploads',
-    questions: [
-      {
-        question: 'What file formats are accepted?',
-        answer: 'We accept PNG, JPG, JPEG, WEBP, and SVG files up to 10 MB.',
+        q: 'Is there a minimum order for custom printing?',
+        a: 'No. You can order a single custom shirt if you want. Volume discounts apply automatically for orders of 10 or more.',
       },
       {
-        question: 'Do you check my design before printing?',
-        answer:
-          'Yes, our team reviews all custom designs before production. If there are issues, we will contact you.',
-      },
-    ],
-  },
-  {
-    category: 'Products & Sizing',
-    questions: [
-      {
-        question: 'How do I find my size?',
-        answer:
-          'Refer to the size guide on each product page. If you are between sizes, we recommend choosing the larger size.',
+        q: 'Can I preview my design before ordering?',
+        a: 'Yes. Our customizer lets you upload your design, position it on the shirt, and see a live preview before you add it to your cart.',
       },
       {
-        question: 'Are the colors accurate?',
-        answer:
-          'We strive to display colors as accurately as possible, but minor variations may occur due to monitor settings.',
-      },
-    ],
-  },
-  {
-    category: 'Account',
-    questions: [
-      {
-        question: 'How do I create an account?',
-        answer:
-          'Click on "Account" in the navigation and choose "Register". Fill in your details and verify your email.',
-      },
-      {
-        question: 'Can I order without an account?',
-        answer:
-          'Yes, guest checkout is available. However, creating an account lets you track orders and save addresses.',
+        q: 'Do custom-printed shirts take longer to ship?',
+        a: 'Yes — custom orders go through a review step before production. Expect 5–7 business days for custom items, plus shipping time.',
       },
     ],
   },
 ];
 
-export default function FaqPage() {
-  const allQuestions = faqSections.flatMap((section) => section.questions);
-
+export default function FAQPage() {
   return (
-    <>
-      <FaqJsonLd items={allQuestions} />
-      <main>
-        <section className="bg-mv-dark text-mv-inverse">
-          <Container className="py-20 md:py-28">
-            <Reveal>
-              <PageHeader
-                title="Frequently Asked Questions"
-                subtitle="Find answers to common questions"
-              />
-            </Reveal>
-          </Container>
-        </section>
+    <Section>
+      <Container>
+        <div className="mx-auto max-w-3xl">
+          <SectionHeading
+            eyebrow="Support"
+            title="Frequently asked questions"
+            subtitle="Everything you need to know about ordering, sizing, shipping, and custom printing."
+          />
 
-        <Section>
-          <Container className="space-y-12">
-            {faqSections.map((section) => (
-              <Reveal key={section.category}>
-                <div>
-                  <h2 className="font-display text-2xl md:text-3xl font-bold text-mv-text mb-4">
-                    {section.category}
-                  </h2>
-                  <Accordion items={section.questions} />
+          <div className="mt-12 space-y-12">
+            {FAQ_SECTIONS.map((section) => (
+              <div key={section.title}>
+                <h2 className="font-display text-2xl font-bold text-mv-text">
+                  {section.title}
+                </h2>
+                <div className="mt-6 divide-y divide-mv-border border-y border-mv-border">
+                  {section.questions.map((item) => (
+                    <details key={item.q} className="group py-5">
+                      <summary className="flex cursor-pointer items-center justify-between gap-4 text-base font-medium text-mv-text list-none">
+                        {item.q}
+                        <span
+                          aria-hidden
+                          className="shrink-0 text-mv-muted transition-transform group-open:rotate-45"
+                        >
+                          +
+                        </span>
+                      </summary>
+                      <p className="mt-3 text-sm leading-relaxed text-mv-text-secondary">
+                        {item.a}
+                      </p>
+                    </details>
+                  ))}
                 </div>
-              </Reveal>
+              </div>
             ))}
-          </Container>
-        </Section>
-      </main>
-    </>
+          </div>
+
+          <div className="mt-16 rounded-lg border border-mv-border bg-mv-bg-alt p-6 text-center">
+            <h3 className="font-display text-xl font-bold text-mv-text">
+              Still need help?
+            </h3>
+            <p className="mt-2 text-sm text-mv-text-secondary">
+              Our team is happy to answer any question we have not covered here.
+            </p>
+            <Link
+              href="/contact"
+              className="mt-4 inline-block text-sm font-medium text-mv-accent underline-offset-4 hover:underline"
+            >
+              Contact us →
+            </Link>
+          </div>
+        </div>
+      </Container>
+    </Section>
   );
 }

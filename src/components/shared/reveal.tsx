@@ -1,30 +1,43 @@
 'use client';
 
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import type { ReactNode } from 'react';
 
 interface RevealProps {
   children: ReactNode;
   delay?: number;
   className?: string;
+  /**
+   * Optional semantic element. Defaults to `div`.
+   * Uses `motion[as]` under the hood so no extra wrapper is added.
+   */
+  as?: 'div' | 'section' | 'article';
 }
 
-export function Reveal({ children, delay = 0, className }: RevealProps) {
-  const prefersReducedMotion = useReducedMotion();
+const variants: Variants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: { opacity: 1, y: 0 },
+};
 
-  if (prefersReducedMotion) {
-    return <div className={className}>{children}</div>;
-  }
+export function Reveal({
+  children,
+  delay = 0,
+  className,
+  as = 'div',
+}: RevealProps) {
+  const MotionTag = motion[as];
 
   return (
-    <motion.div
+    <MotionTag
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: '-80px' }}
+      transition={{ duration: 0.5, delay, ease: [0.16, 1, 0.3, 1] }}
+      variants={variants}
+      style={{ willChange: 'transform, opacity' }}
       className={className}
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-100px' }}
-      transition={{ duration: 0.5, delay, ease: 'easeOut' }}
     >
       {children}
-    </motion.div>
+    </MotionTag>
   );
 }
