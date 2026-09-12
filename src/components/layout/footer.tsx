@@ -24,6 +24,8 @@ const FOOTER_LINKS = {
 
 export function Footer() {
   const year = new Date().getFullYear();
+  const brandName = publicEnv.NEXT_PUBLIC_APP_NAME;
+  const tagline = publicEnv.NEXT_PUBLIC_APP_TAGLINE;
 
   return (
     <footer className="mt-20 border-t border-mv-border bg-mv-bg-alt">
@@ -31,11 +33,17 @@ export function Footer() {
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4 md:gap-12">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
-            <Link href="/" className="font-display text-xl font-bold text-mv-text">
-              {publicEnv.NEXT_PUBLIC_APP_NAME}
+            <Link
+              href="/"
+              className="font-display text-xl font-bold text-mv-text"
+            >
+              {brandName}
             </Link>
-            <p className="mt-3 text-sm text-mv-text-secondary max-w-xs">
-              {publicEnv.NEXT_PUBLIC_APP_TAGLINE}
+            <p className="mt-3 text-sm font-medium text-mv-text">
+              {tagline}
+            </p>
+            <p className="mt-2 max-w-xs text-sm text-mv-text-secondary">
+              Considered basics, made in Pakistan.
             </p>
           </div>
 
@@ -73,8 +81,8 @@ export function Footer() {
             </ul>
           </nav>
 
-          {/* Company */}
-          <nav aria-label="Company">
+          {/* Company — spans both columns on mobile so it doesn't orphan */}
+          <nav aria-label="Company" className="col-span-2 md:col-span-1">
             <h3 className="text-sm font-semibold text-mv-text">Company</h3>
             <ul className="mt-3 space-y-2">
               {FOOTER_LINKS.company.map((link) => (
@@ -93,10 +101,10 @@ export function Footer() {
 
         <div className="mt-12 flex flex-col gap-3 border-t border-mv-border pt-6 text-xs text-mv-muted md:flex-row md:items-center md:justify-between">
           <p>
-            © {year} {publicEnv.NEXT_PUBLIC_APP_NAME}. All rights reserved.
+            © {year} {brandName}. All rights reserved.
           </p>
           <p>
-            Designed & developed by{' '}
+            Designed &amp; developed by{' '}
             <a
               href="https://usmanmurtaza.netlify.app"
               target="_blank"
