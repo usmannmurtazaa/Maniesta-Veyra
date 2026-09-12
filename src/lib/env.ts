@@ -16,10 +16,10 @@ const serverEnvSchema = z.object({
 });
 
 const publicEnvSchema = z.object({
-  NEXT_PUBLIC_APP_URL: z.string().url().default('http://localhost:3000'),
+  NEXT_PUBLIC_APP_URL: z.string().url().default('https://maniesta-veyra.netlify.app/'),
   NEXT_PUBLIC_APP_NAME: z.string().default('Maniesta Veyra'),
   NEXT_PUBLIC_APP_TAGLINE: z.string().default('Wear Your Identity.'),
-  NEXT_PUBLIC_PORTFOLIO_URL: z.string().url().default('https://usmanmurtaza.netlify.app'),
+  NEXT_PUBLIC_PORTFOLIO_URL: z.string().url().default('https://usmanmurtaza.netlify.app/'),
   NEXT_PUBLIC_CURRENCY: z.string().default('PKR'),
   NEXT_PUBLIC_CURRENCY_SYMBOL: z.string().default('₨'),
   NEXT_PUBLIC_GA_ID: z.string().optional(),

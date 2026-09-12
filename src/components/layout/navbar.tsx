@@ -32,26 +32,29 @@ export function Navbar() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const searchContainerRef = useRef<HTMLDivElement>(null);
+  const searchPanelRef = useRef<HTMLDivElement>(null);
+  const searchButtonRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Total quantity from cart store
   const cartCount = useCartStore((s) => s.totalItems);
 
-  // Close search on outside click
+  // Close search on outside click — but ignore clicks on the toggle button
   useEffect(() => {
     if (!isSearchOpen) return;
+
     function onClick(e: MouseEvent) {
-      if (
-        searchContainerRef.current &&
-        !searchContainerRef.current.contains(e.target as Node)
-      ) {
-        setIsSearchOpen(false);
-      }
+      const target = e.target as Node;
+      // Click inside the panel → don't close
+      if (searchPanelRef.current?.contains(target)) return;
+      // Click on the toggle button → let the button's onClick handle it
+      if (searchButtonRef.current?.contains(target)) return;
+      setIsSearchOpen(false);
     }
+
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') setIsSearchOpen(false);
     }
+
     document.addEventListener('mousedown', onClick);
     document.addEventListener('keydown', onKey);
     return () => {
@@ -60,7 +63,7 @@ export function Navbar() {
     };
   }, [isSearchOpen]);
 
-  // Focus input when search opens — but not on mobile (avoid keyboard popup)
+  // Focus input on desktop when search opens (avoid mobile keyboard pop)
   useEffect(() => {
     if (!isSearchOpen) return;
     if (window.matchMedia('(min-width: 768px)').matches) {
@@ -98,33 +101,35 @@ export function Navbar() {
             className="h-8 w-8 rounded"
             priority
           />
-          <span className="font-display text-xl font-bold text-mv-text hidden sm:inline">
+          <span className="hidden font-display text-xl font-bold text-mv-text sm:inline">
             {publicEnv.NEXT_PUBLIC_APP_NAME}
           </span>
         </Link>
 
-        {/* Desktop navigation */}
-        <nav className="hidden md:flex items-center gap-6" aria-label="Main">
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={cn(
-                'text-sm font-medium transition-colors',
-                isActive(link.href)
-                  ? 'text-mv-accent'
-                  : 'text-mv-text hover:text-mv-accent'
-              )}
-              aria-current={isActive(link.href) ? 'page' : undefined}
-            >
-              {link.label}
-            </Link>
-          ))}
+        {/* Desktop nav */}
+        <nav className="hidden items-center gap-6 md:flex" aria-label="Main">
+          {NAV_LINKS.map((link) => {
+            const active = isActive(link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  'text-sm font-medium transition-colors',
+                  active ? 'text-mv-accent' : 'text-mv-text hover:text-mv-accent'
+                )}
+                aria-current={active ? 'page' : undefined}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
         </nav>
 
-        {/* Icons */}
-        <div className="flex items-center gap-2">
+        {/* Icon actions */}
+        <div className="flex items-center gap-1 sm:gap-2">
           <Button
+            ref={searchButtonRef}
             variant="ghost"
             size="icon"
             onClick={() => setIsSearchOpen((v) => !v)}
@@ -147,12 +152,20 @@ export function Navbar() {
             </Button>
           </Link>
 
-          <Link href="/cart" aria-label={`Cart, ${cartCount} item${cartCount === 1 ? '' : 's'}`}>
-            <Button variant="ghost" size="icon" className="relative" aria-label="Cart">
+          <Link
+            href="/cart"
+            aria-label={`Cart, ${cartCount} item${cartCount === 1 ? '' : 's'}`}
+          >
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative"
+              aria-label="Cart"
+            >
               <ShoppingBag className="h-5 w-5" />
               {cartCount > 0 && (
                 <span
-                  className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-mv-accent px-1 text-[10px] font-medium text-white"
+                  className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-mv-accent px-1 text-[10px] font-medium text-white"
                   aria-hidden="true"
                 >
                   {cartCount > 99 ? '99+' : cartCount}
@@ -161,7 +174,7 @@ export function Navbar() {
             </Button>
           </Link>
 
-          {/* Mobile menu trigger */}
+          {/* Mobile menu */}
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button
@@ -177,22 +190,43 @@ export function Navbar() {
               <SheetHeader>
                 <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
               </SheetHeader>
-              <nav className="flex flex-col gap-1 mt-8" aria-label="Mobile">
-                {NAV_LINKS.map((link) => (
+              <nav className="mt-8 flex flex-col gap-1" aria-label="Mobile">
+                {NAV_LINKS.map((link) => {
+                  const active = isActive(link.href);
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={cn(
+                        'rounded-md px-2 py-3 text-base font-medium transition-colors',
+                        active
+                          ? 'bg-mv-bg-alt text-mv-accent'
+                          : 'text-mv-text hover:bg-mv-bg-alt'
+                      )}
+                    >
+                      {link.label}
+                    </Link>
+                  );
+                })}
+
+                {/* Secondary links — mobile only */}
+                <div className="mt-4 border-t border-mv-border pt-4">
                   <Link
-                    key={link.href}
-                    href={link.href}
+                    href="/wishlist"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className={cn(
-                      'text-base font-medium py-3 px-2 rounded-md transition-colors',
-                      isActive(link.href)
-                        ? 'text-mv-accent bg-mv-bg-alt'
-                        : 'text-mv-text hover:bg-mv-bg-alt'
-                    )}
+                    className="block rounded-md px-2 py-3 text-base font-medium text-mv-text-secondary hover:bg-mv-bg-alt"
                   >
-                    {link.label}
+                    Wishlist
                   </Link>
-                ))}
+                  <Link
+                    href="/account"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block rounded-md px-2 py-3 text-base font-medium text-mv-text-secondary hover:bg-mv-bg-alt"
+                  >
+                    Account
+                  </Link>
+                </div>
               </nav>
             </SheetContent>
           </Sheet>
@@ -203,7 +237,7 @@ export function Navbar() {
       {isSearchOpen && (
         <div
           id="mv-search-panel"
-          ref={searchContainerRef}
+          ref={searchPanelRef}
           className="border-t border-mv-border bg-mv-bg"
         >
           <Container className="py-4">
@@ -212,7 +246,10 @@ export function Navbar() {
                 Search products
               </label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-mv-muted" aria-hidden="true" />
+                <Search
+                  className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-mv-muted"
+                  aria-hidden="true"
+                />
                 <Input
                   id="mv-search-input"
                   ref={inputRef}
@@ -228,7 +265,7 @@ export function Navbar() {
                   type="submit"
                   size="sm"
                   variant="default"
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 h-7"
+                  className="absolute right-1.5 top-1/2 h-7 -translate-y-1/2"
                 >
                   Search
                 </Button>

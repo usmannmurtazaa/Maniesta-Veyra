@@ -12,7 +12,9 @@ export async function requireAuth() {
 export async function requireAdmin() {
   const session = await requireAuth();
   const role = session.user.role;
-  if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
+
+  // Explicit check for undefined role (e.g., old JWT before role was added)
+  if (!role || (role !== 'ADMIN' && role !== 'SUPER_ADMIN')) {
     throw new ForbiddenError();
   }
   return session;

@@ -17,7 +17,11 @@ export interface Position {
 
 /**
  * Enforce that a design's center stays within a printable area.
- * The design position is the center of the design.
+ *
+ * The design position is treated as the center of the design.
+ * If the design is larger than the area (should not happen after
+ * `clampScale`, but possible in edge cases), it is centered in the area
+ * rather than pushed to the edge.
  */
 export function enforceBoundary(
   designPos: Position,
@@ -32,16 +36,28 @@ export function enforceBoundary(
   const minY = area.y + halfH;
   const maxY = area.y + area.height - halfH;
 
-  return {
-    x: Math.min(Math.max(designPos.x, minX), maxX),
-    y: Math.min(Math.max(designPos.y, minY), maxY),
-  };
+  const x =
+    minX > maxX
+      ? area.x + area.width / 2
+      : Math.min(Math.max(designPos.x, minX), maxX);
+
+  const y =
+    minY > maxY
+      ? area.y + area.height / 2
+      : Math.min(Math.max(designPos.y, minY), maxY);
+
+  return { x, y };
 }
 
 /**
  * Clamp the scale of a design so that it fits within a printable area.
- * Returns a scale value that is between minScale (0.05) and the maximum
- * scale that fits within the area.
+ *
+ * Returns `scale` bounded by:
+ *   - lower bound: minScale (0.05) — but only if that fits
+ *   - upper bound: the largest scale that keeps the design inside the area
+ *
+ * When the design is naturally larger than the area, minScale is overridden
+ * because the design MUST fit. In that case the returned value is < 0.05.
  */
 export function clampScale(
   scale: number,
@@ -49,6 +65,17 @@ export function clampScale(
   area: PrintableArea
 ): number {
   const minScale = 0.05;
+
+  // Guard: with zero/negative dimensions, no meaningful constraint exists.
+  if (
+    designSize.width <= 0 ||
+    designSize.height <= 0 ||
+    area.width <= 0 ||
+    area.height <= 0
+  ) {
+    return minScale;
+  }
+
   const maxScaleByWidth = area.width / designSize.width;
   const maxScaleByHeight = area.height / designSize.height;
   const maxScale = Math.min(maxScaleByWidth, maxScaleByHeight);

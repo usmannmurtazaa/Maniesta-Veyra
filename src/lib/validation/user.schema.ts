@@ -1,12 +1,21 @@
 import { z } from 'zod';
 
-export const registerSchema = z.object({
-  firstName: z.string().min(1, 'First name is required').max(50),
-  lastName: z.string().min(1, 'Last name is required').max(50),
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters').max(100),
-  phone: z.string().optional(),
-});
+export const registerSchema = z
+  .object({
+    firstName: z.string().min(1, 'First name is required').max(50),
+    lastName: z.string().min(1, 'Last name is required').max(50),
+    email: z.string().email('Invalid email address'),
+    password: z
+      .string()
+      .min(8, 'Password must be at least 8 characters')
+      .max(100),
+    confirmPassword: z.string(),
+    phone: z.string().optional(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
 
 export const loginSchema = z.object({
   email: z.string().email('Invalid email'),
@@ -17,14 +26,26 @@ export const forgotPasswordSchema = z.object({
   email: z.string().email('Invalid email'),
 });
 
-export const resetPasswordSchema = z.object({
-  token: z.string().min(1, 'Token is required'),
-  password: z.string().min(8, 'Password must be at least 8 characters').max(100),
-});
+export const resetPasswordSchema = z
+  .object({
+    token: z.string().min(1, 'Token is required'),
+    password: z
+      .string()
+      .min(8, 'Password must be at least 8 characters')
+      .max(100),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
 
 export const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, 'Current password is required'),
-  newPassword: z.string().min(8, 'New password must be at least 8 characters').max(100),
+  newPassword: z
+    .string()
+    .min(8, 'New password must be at least 8 characters')
+    .max(100),
 });
 
 export const verifyEmailSchema = z.object({

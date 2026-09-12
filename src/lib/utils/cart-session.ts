@@ -7,7 +7,7 @@ export async function getGuestSessionId(): Promise<string | undefined> {
   return cookieStore.get(GUEST_SESSION_COOKIE)?.value;
 }
 
-export async function setGuestSessionCookie(sessionId: string) {
+export async function setGuestSessionCookie(sessionId: string): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.set(GUEST_SESSION_COOKIE, sessionId, {
     httpOnly: true,
@@ -18,7 +18,7 @@ export async function setGuestSessionCookie(sessionId: string) {
   });
 }
 
-export async function clearGuestSessionCookie() {
+export async function clearGuestSessionCookie(): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.set(GUEST_SESSION_COOKIE, '', {
     httpOnly: true,

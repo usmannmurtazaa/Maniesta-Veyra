@@ -24,22 +24,27 @@ const serwist = new Serwist({
   navigationPreload: true,
 
   fallbacks: {
-  entries: [
-    {
-      url: '/offline.html',
-      matcher: ({ request }) => request.destination === 'document',
-    },
-  ],
-},
+    entries: [
+      {
+        url: '/offline.html',
+        matcher: ({ request }) => request.destination === 'document',
+      },
+    ],
+  },
 
   runtimeCaching: [
-    // Private API routes — never cache
+    // ----------------------------------------------------------------
+    // Custom overrides — must come BEFORE defaultCache so they win.
+    // Serwist matches top-to-bottom and stops at the first match.
+    // ----------------------------------------------------------------
+
+    // 1. Private API routes — never cache
     {
       matcher: ({ url }) => url.pathname.startsWith('/api/'),
       handler: new NetworkOnly(),
     },
 
-    // Private page routes — never cache the document
+    // 2. Private page routes — never cache the document
     {
       matcher: ({ url }) =>
         /^\/(account|checkout|cart|admin|wishlist|auth|customize)(\/|$)/.test(
@@ -48,7 +53,26 @@ const serwist = new Serwist({
       handler: new NetworkOnly(),
     },
 
-    // Vercel Blob product images — long-lived cache
+    // 3. Public documents — NetworkFirst with 5s timeout.
+    //    When the server returns 5xx OR the request times out, Serwist
+    //    falls through to the `fallbacks` entry above (serves /offline.html)
+    //    instead of showing the browser's crash page.
+    //    Only 200 responses are cached (cacheableResponse statuses below).
+    {
+      matcher: ({ request }) => request.destination === 'document',
+      handler: new NetworkFirst({
+        cacheName: 'mv-documents',
+        networkTimeoutSeconds: 5,
+        plugins: [
+          new CacheableResponsePlugin({
+            // Do NOT cache 5xx or 404 responses
+            statuses: [200],
+          }),
+        ],
+      }),
+    },
+
+    // 4. Vercel Blob product images — long-lived cache
     {
       matcher: ({ url }) => url.hostname.endsWith('.blob.vercel-storage.com'),
       handler: new CacheFirst({
@@ -65,7 +89,7 @@ const serwist = new Serwist({
       }),
     },
 
-    // GA4 — fail fast when offline
+    // 5. GA4 — fail fast when offline
     {
       matcher: ({ url }) => url.hostname === 'www.googletagmanager.com',
       handler: new NetworkFirst({
@@ -74,7 +98,10 @@ const serwist = new Serwist({
       }),
     },
 
-    // Default Serwist rules (documents, Next.js chunks, fonts, RSC)
+    // ----------------------------------------------------------------
+    // Default Serwist rules — Next.js chunks, fonts, RSC payloads.
+    // These never run for documents because rule #3 matches first.
+    // ----------------------------------------------------------------
     ...defaultCache,
   ],
 });

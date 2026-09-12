@@ -87,12 +87,15 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
                         : undefined
                     }
                     imageUrl={product.images[0]?.url}
+                    secondaryImageUrl={product.images[1]?.url}
+                    categoryName={product.category?.name}
                     rating={
                       product.ratingCount > 0
                         ? Number(product.ratingAvg)
                         : undefined
                     }
                     ratingCount={product.ratingCount || undefined}
+                    inStock={product.variants.some((v) => v.stock > 0)}
                     badge={
                       product.compareAtPrice
                         ? 'Sale'
