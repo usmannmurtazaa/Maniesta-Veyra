@@ -1,33 +1,70 @@
-import { Prisma, Order, OrderStatus, PaymentMethod, PaymentStatus, PrintLocation } from '@prisma/client';
+import {
+  Prisma,
+  OrderStatus,
+  PaymentStatus,
+} from '@prisma/client';
 import { prisma } from '@/lib/db/prisma';
 import { cartService } from './cart-service';
 import { couponService } from './coupon-service';
 import { getPaymentProvider } from '@/lib/payments/factory';
-import { NotFoundError, OutOfStockError, InvalidCouponError, ConflictError } from '@/lib/errors';
+import { NotFoundError, OutOfStockError, ConflictError } from '@/lib/errors';
 import type { CreateOrderInput } from '@/lib/validation/order.schema';
 import { randomBytes } from 'crypto';
-import { sendOrderConfirmationEmail, sendCustomOrderReceivedEmail } from '@/lib/email/send';
+import {
+  sendOrderConfirmationEmail,
+  sendCustomOrderReceivedEmail,
+} from '@/lib/email/send';
 
 function generateOrderNumber(): string {
-  const timestamp = new Date().getFullYear().toString().slice(-2) + (new Date().getMonth() + 1).toString().padStart(2, '0');
+  const now = new Date();
+  const year = now.getFullYear().toString().slice(-2);
+  const month = (now.getMonth() + 1).toString().padStart(2, '0');
   const random = randomBytes(4).toString('hex').toUpperCase();
-  return `ORD-${timestamp}-${random}`;
+  return `ORD-${year}${month}-${random}`;
+}
+
+interface OrderItemSnapshot {
+  productName: string;
+  productSlug: string | null;
+  variantSku: string | null;
+  colorName: string | null;
+  sizeLabel: string | null;
+  unitPrice: string;
+  customDesignSnapshot?: {
+    garmentId: string;
+    garmentName: string;
+    color: string;
+    size: string;
+    printLocations: string[];
+    assets: Array<{
+      printLocation: string;
+      imageUrl: string;
+      positionX: number;
+      positionY: number;
+      scale: number;
+      rotation: number;
+    }>;
+    notes: string | null;
+    previewImageUrl: string | null;
+  };
 }
 
 export class OrderService {
   async createOrder(input: CreateOrderInput, userId?: string) {
-    // Idempotency check
+    // ---- Idempotency: return existing order if the key was already used ----
     if (input.idempotencyKey) {
       const existing = await prisma.order.findUnique({
         where: { idempotencyKey: input.idempotencyKey },
+        include: { items: true },
       });
-      if (existing) {
-        return existing; // Return existing order to prevent duplicate
-      }
+      if (existing) return existing;
     }
 
-    // Get cart
-    const cart = await cartService.getCart(input.cartId!); // cartId must be provided
+    if (!input.cartId) {
+      throw new NotFoundError('Cart ID is required');
+    }
+
+    const cart = await cartService.getCart(input.cartId);
     if (!cart) throw new NotFoundError('Cart not found');
 
     const cartItems = cart.items.filter((item) => !item.isSavedForLater);
@@ -35,37 +72,43 @@ export class OrderService {
       throw new NotFoundError('Cart is empty');
     }
 
-    // Begin transaction
-    return await prisma.$transaction(async (tx) => {
-      // 1. Recalculate prices, validate stock, prepare order items
+    // ---- Run the entire order creation in a transaction ----
+    const order = await prisma.$transaction(async (tx) => {
       let subtotal = new Prisma.Decimal(0);
-      const orderItemsData = [];
+
+      // ✅ Use the correct nested-create input type (relation syntax, not FK scalars)
+      const orderItemsData: Prisma.OrderItemCreateWithoutOrderInput[] = [];
 
       for (const item of cartItems) {
         let unitPrice: Prisma.Decimal;
-        let snapshot: any = {};
+        let snapshot: OrderItemSnapshot;
 
         if (item.productVariantId && item.productVariant) {
           const variant = await tx.productVariant.findUnique({
             where: { id: item.productVariantId },
-            include: {
-              product: true,
-              color: true,
-              size: true,
-            },
+            include: { product: true, color: true, size: true },
           });
 
-          if (!variant || !variant.isActive || variant.product.deletedAt || !variant.product.isActive) {
-            throw new NotFoundError(`Product variant ${item.productVariantId} is not available`);
+          if (
+            !variant ||
+            !variant.isActive ||
+            variant.product.deletedAt ||
+            !variant.product.isActive
+          ) {
+            throw new NotFoundError(
+              `Product variant ${item.productVariantId} is no longer available`
+            );
           }
 
-          // Check stock and deduct atomically
+          // Atomic stock deduction
           const result = await tx.productVariant.updateMany({
             where: { id: variant.id, stock: { gte: item.quantity } },
             data: { stock: { decrement: item.quantity } },
           });
           if (result.count === 0) {
-            throw new OutOfStockError(`Insufficient stock for ${variant.product.name} (${variant.color.name} / ${variant.size.label})`);
+            throw new OutOfStockError(
+              `Insufficient stock for ${variant.product.name} (${variant.color.name} / ${variant.size.label})`
+            );
           }
 
           unitPrice = variant.price ?? variant.product.basePrice;
@@ -80,19 +123,12 @@ export class OrderService {
         } else if (item.customDesignId && item.customDesign) {
           const design = await tx.customDesign.findUnique({
             where: { id: item.customDesignId },
-            include: {
-              garment: true,
-              color: true,
-              size: true,
-              assets: true,
-            },
+            include: { garment: true, color: true, size: true, assets: true },
           });
-
           if (!design) {
             throw new NotFoundError('Custom design not found');
           }
 
-          // Check garment variant stock
           const garmentVariant = await tx.garmentVariant.findFirst({
             where: {
               garmentId: design.garmentId,
@@ -101,7 +137,6 @@ export class OrderService {
               isActive: true,
             },
           });
-
           if (!garmentVariant) {
             throw new NotFoundError('Garment variant not found');
           }
@@ -111,7 +146,9 @@ export class OrderService {
             data: { stock: { decrement: item.quantity } },
           });
           if (result.count === 0) {
-            throw new OutOfStockError(`Insufficient garment stock for ${design.garment.name} (${design.color.name} / ${design.size.label})`);
+            throw new OutOfStockError(
+              `Insufficient garment stock for ${design.garment.name} (${design.color.name} / ${design.size.label})`
+            );
           }
 
           unitPrice = design.unitPrice;
@@ -127,7 +164,7 @@ export class OrderService {
               garmentName: design.garment.name,
               color: design.color.name,
               size: design.size.label,
-              printLocations: design.printLocations,
+              printLocations: design.printLocations as string[],
               assets: design.assets.map((asset) => ({
                 printLocation: asset.printLocation,
                 imageUrl: asset.imageUrl,
@@ -147,9 +184,14 @@ export class OrderService {
         const lineTotal = unitPrice.mul(item.quantity);
         subtotal = subtotal.add(lineTotal);
 
+        // ✅ Relation syntax (connect) instead of scalar FKs
         orderItemsData.push({
-          productVariantId: item.productVariantId,
-          customDesignId: item.customDesignId,
+          productVariant: item.productVariantId
+            ? { connect: { id: item.productVariantId } }
+            : undefined,
+          customDesign: item.customDesignId
+            ? { connect: { id: item.customDesignId } }
+            : undefined,
           productName: snapshot.productName,
           productSlug: snapshot.productSlug,
           variantSku: snapshot.variantSku,
@@ -159,34 +201,48 @@ export class OrderService {
           quantity: item.quantity,
           totalPrice: lineTotal,
           isCustomDesign: !!item.customDesignId,
-          customDesignSnapshot: snapshot.customDesignSnapshot || undefined,
+          // ✅ Prisma's JSON null handling
+          customDesignSnapshot: snapshot.customDesignSnapshot
+            ? (snapshot.customDesignSnapshot as Prisma.InputJsonValue)
+            : Prisma.DbNull,
         });
       }
 
-      // 2. Apply coupon if provided
+      // ---- Coupon ----
       let discountAmount = new Prisma.Decimal(0);
       let couponId: string | null = null;
       if (input.couponCode) {
-        const couponResult = await couponService.validateCoupon(input.couponCode, subtotal, userId);
+        const couponResult = await couponService.validateCoupon(
+          input.couponCode,
+          subtotal,
+          userId
+        );
         discountAmount = couponResult.discountAmount;
         couponId = couponResult.coupon.id;
       }
 
-      // 3. Shipping cost (flat rate for now; can be adjusted via settings)
-      const shippingCost = new Prisma.Decimal(0); // placeholder; real logic in later refinement
-
-      // 4. Tax calculation (simplified; 0% for now)
+      const shippingCost = new Prisma.Decimal(0);
       const taxAmount = new Prisma.Decimal(0);
-
-      // 5. Total
       const total = subtotal.sub(discountAmount).add(shippingCost).add(taxAmount);
 
-      // 6. Create order
-      const orderNumber = generateOrderNumber();
-      const order = await tx.order.create({
+      // ---- Resolve customer email ----
+      let customerEmail = '';
+      if (userId) {
+        const user = await tx.user.findUnique({
+          where: { id: userId },
+          select: { email: true },
+        });
+        customerEmail = user?.email ?? '';
+      } else if ('email' in input.shippingAddress) {
+        customerEmail =
+          (input.shippingAddress as { email?: string }).email ?? '';
+      }
+
+      // ---- Create order + items (include items so we can access them below) ----
+      const createdOrder = await tx.order.create({
         data: {
-          orderNumber,
-          userId: userId || null,
+          orderNumber: generateOrderNumber(),
+          userId: userId ?? null,
           status: OrderStatus.PENDING,
           subtotal,
           discountAmount,
@@ -195,68 +251,62 @@ export class OrderService {
           total,
           currency: 'PKR',
           couponId,
-          customerEmail: userId ? (await tx.user.findUnique({ where: { id: userId } }))?.email ?? '' : '',
+          customerEmail,
           customerPhone: input.shippingAddress.phone,
-          shippingAddressSnapshot: input.shippingAddress,
-          billingAddressSnapshot: input.billingAddress,
+          shippingAddressSnapshot: input.shippingAddress as Prisma.InputJsonValue,
+          // ✅ Prisma DbNull for empty JSON column
+          billingAddressSnapshot: input.billingAddress
+            ? (input.billingAddress as Prisma.InputJsonValue)
+            : Prisma.DbNull,
           paymentMethod: input.paymentMethod,
           paymentStatus: PaymentStatus.PENDING,
-          notes: input.notes,
-          idempotencyKey: input.idempotencyKey,
-          items: {
-            create: orderItemsData,
-          },
+          notes: input.notes ?? null,
+          idempotencyKey: input.idempotencyKey ?? null,
+          items: { create: orderItemsData },
         },
-        include: {
-          items: true,
-        },
+        include: { items: true },
       });
 
-      // 7. Create payment record using provider
+      // ---- Payment record ----
       const provider = getPaymentProvider(input.paymentMethod);
-      const paymentIntent = await provider.createPaymentIntent(order, Number(total));
+      const paymentIntent = await provider.createPaymentIntent(
+        createdOrder,
+        Number(total)
+      );
       await tx.payment.create({
         data: {
-          orderId: order.id,
+          orderId: createdOrder.id,
           amount: total,
           currency: 'PKR',
           method: input.paymentMethod,
           status: PaymentStatus.PENDING,
-          transactionId: paymentIntent.transactionId,
-          providerResponse: paymentIntent.providerResponse as any,
+          transactionId: paymentIntent.transactionId ?? null,
+          // ✅ Prisma JSON null
+          providerResponse: paymentIntent.providerResponse
+            ? (paymentIntent.providerResponse as Prisma.InputJsonValue)
+            : Prisma.DbNull,
         },
       });
 
-      // 8. Create custom order tracking for custom items
-      const customItems = orderItemsData.filter((item) => item.isCustomDesign);
-      for (const customItem of customItems) {
-        const orderItem = await tx.orderItem.findFirst({
-          where: {
-            orderId: order.id,
-            productName: customItem.productName,
-            // We need a better way to match; we'll use a unique match on customDesignId
-            customDesignId: customItem.customDesignId,
+      // ---- Custom order tracking ----
+      // `createdOrder.items` is populated because we used include above
+      const customItems = createdOrder.items.filter(
+        (item) => item.isCustomDesign
+      );
+      for (const item of customItems) {
+        await tx.customOrderTracking.create({
+          data: {
+            orderItemId: item.id,
+            status: 'PENDING_REVIEW',
+            customerNotes: input.notes ?? null,
           },
         });
-        if (orderItem) {
-          await tx.customOrderTracking.create({
-            data: {
-              orderItemId: orderItem.id,
-              status: 'PENDING_REVIEW',
-              customerNotes: customItem.customDesignSnapshot?.notes,
-            },
-          });
-        }
       }
 
-      // 9. Record coupon usage
+      // ---- Coupon usage ----
       if (couponId && userId) {
         await tx.couponUsage.create({
-          data: {
-            couponId,
-            userId,
-            orderId: order.id,
-          },
+          data: { couponId, userId, orderId: createdOrder.id },
         });
         await tx.coupon.update({
           where: { id: couponId },
@@ -264,37 +314,33 @@ export class OrderService {
         });
       }
 
-      // 10. Clear cart
+      // ---- Clear purchased cart items ----
       await tx.cartItem.deleteMany({
         where: { cartId: cart.id, isSavedForLater: false },
       });
 
-      // 11. Send confirmation emails (non-blocking; we'll call outside transaction)
-      // We'll do it after commit.
-
-      return order;
-    }).then(async (order) => {
-      // Send emails outside transaction
-      try {
-        if (userId) {
-          const user = await prisma.user.findUnique({ where: { id: userId } });
-          if (user) {
-            await sendOrderConfirmationEmail(user.email, order);
-          }
-        }
-        // Send custom order received emails if custom items
-        const hasCustom = order.items.some((item) => item.isCustomDesign);
-        if (hasCustom && userId) {
-          const user = await prisma.user.findUnique({ where: { id: userId } });
-          if (user) {
-            await sendCustomOrderReceivedEmail(user.email, order);
-          }
-        }
-      } catch (emailError) {
-        console.error('Failed to send order email:', emailError);
-      }
-      return order;
+      return createdOrder;
     });
+
+    // ---- Confirmation emails (outside transaction) ----
+    if (order.customerEmail) {
+      try {
+        await sendOrderConfirmationEmail(order.customerEmail, order);
+      } catch (error) {
+        console.error('[order] confirmation email failed:', error);
+      }
+
+      const hasCustom = order.items.some((item) => item.isCustomDesign);
+      if (hasCustom) {
+        try {
+          await sendCustomOrderReceivedEmail(order.customerEmail, order);
+        } catch (error) {
+          console.error('[order] custom order email failed:', error);
+        }
+      }
+    }
+
+    return order;
   }
 
   async getOrderByNumber(orderNumber: string, userId?: string) {
@@ -304,7 +350,11 @@ export class OrderService {
         items: {
           include: {
             productVariant: {
-              include: { product: { include: { images: true } }, color: true, size: true },
+              include: {
+                product: { include: { images: true } },
+                color: true,
+                size: true,
+              },
             },
             customDesign: {
               include: { garment: true, color: true, size: true, assets: true },
@@ -313,18 +363,23 @@ export class OrderService {
           },
         },
         payments: true,
-        statusHistory: true,
+        statusHistory: { orderBy: { createdAt: 'desc' } },
       },
     });
+
     if (!order) throw new NotFoundError('Order not found');
     if (userId && order.userId !== userId) {
       throw new ConflictError('Not your order');
     }
+
     return order;
   }
 
   async cancelOrder(orderNumber: string, userId?: string) {
-    const order = await prisma.order.findUnique({ where: { orderNumber } });
+    const order = await prisma.order.findUnique({
+      where: { orderNumber },
+      include: { items: true },
+    });
     if (!order) throw new NotFoundError('Order not found');
     if (userId && order.userId !== userId) {
       throw new ConflictError('Not your order');
@@ -334,16 +389,13 @@ export class OrderService {
     }
 
     return await prisma.$transaction(async (tx) => {
-      // Restore inventory
-      const items = await tx.orderItem.findMany({ where: { orderId: order.id } });
-      for (const item of items) {
+      for (const item of order.items) {
         if (item.productVariantId) {
           await tx.productVariant.update({
             where: { id: item.productVariantId },
             data: { stock: { increment: item.quantity } },
           });
         } else if (item.customDesignId) {
-          // Restore garment stock
           const design = await tx.customDesign.findUnique({
             where: { id: item.customDesignId },
           });
@@ -365,19 +417,19 @@ export class OrderService {
         }
       }
 
-      // Update order status
-      const updatedOrder = await tx.order.update({
+      return tx.order.update({
         where: { id: order.id },
         data: {
           status: OrderStatus.CANCELLED,
           cancelledAt: new Date(),
           statusHistory: {
-            create: { status: OrderStatus.CANCELLED, notes: 'Order cancelled by customer' },
+            create: {
+              status: OrderStatus.CANCELLED,
+              notes: 'Order cancelled',
+            },
           },
         },
       });
-
-      return updatedOrder;
     });
   }
 }

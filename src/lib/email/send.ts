@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import { Prisma } from '@prisma/client';
 import { getServerEnv, getPublicEnv } from '@/lib/env';
 import { formatCurrency } from '@/lib/utils/format';
 
@@ -24,15 +25,12 @@ interface OrderEmailData {
     colorName?: string | null;
     sizeLabel?: string | null;
   }>;
-  shippingAddressSnapshot?: {
-    fullName?: string;
-    addressLine1?: string;
-    addressLine2?: string | null;
-    city?: string;
-    state?: string;
-    postalCode?: string;
-    phone?: string;
-  };
+  /**
+   * Prisma stores JSON columns as `JsonValue`, which can be any JSON shape
+   * (string, number, array, object, or null). We narrow it at read time
+   * via `readShippingAddress()` below.
+   */
+  shippingAddressSnapshot?: Prisma.JsonValue;
 }
 
 // ---------------------------------------------------------------------------
@@ -47,6 +45,33 @@ const BRAND = {
   muted: '#8a8a9a',
   border: '#e8e8e0',
 };
+
+// ---------------------------------------------------------------------------
+// Runtime narrowing for the shipping address JSON column
+//
+// Prisma's `JsonValue` includes `null`, primitives, and arrays. At runtime
+// the field is always the object we wrote during checkout, but TypeScript
+// only knows the broad type. This helper extracts only the string fields
+// we care about — anything unexpected becomes an empty string.
+// ---------------------------------------------------------------------------
+function readShippingAddress(value: Prisma.JsonValue | undefined) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return null;
+  }
+
+  const v = value as Record<string, Prisma.JsonValue>;
+  const str = (key: string) => (typeof v[key] === 'string' ? (v[key] as string) : '');
+
+  return {
+    fullName: str('fullName'),
+    addressLine1: str('addressLine1'),
+    addressLine2: str('addressLine2'),
+    city: str('city'),
+    state: str('state'),
+    postalCode: str('postalCode'),
+    phone: str('phone'),
+  };
+}
 
 // ---------------------------------------------------------------------------
 // HTML shell — shared wrapper for every email
@@ -275,14 +300,16 @@ export async function sendOrderConfirmationEmail(
         .join('')
     : '';
 
-  const addressHtml = order.shippingAddressSnapshot
+  // Narrow the JSON column at runtime before rendering.
+  const addr = readShippingAddress(order.shippingAddressSnapshot);
+  const addressHtml = addr
     ? `
     <p style="margin:0;color:${BRAND.muted};font-size:13px;line-height:1.6;">
-      ${order.shippingAddressSnapshot.fullName ?? ''}<br />
-      ${order.shippingAddressSnapshot.addressLine1 ?? ''}<br />
-      ${order.shippingAddressSnapshot.addressLine2 ? `${order.shippingAddressSnapshot.addressLine2}<br />` : ''}
-      ${order.shippingAddressSnapshot.city ?? ''}, ${order.shippingAddressSnapshot.state ?? ''} ${order.shippingAddressSnapshot.postalCode ?? ''}<br />
-      ${order.shippingAddressSnapshot.phone ?? ''}
+      ${addr.fullName}<br />
+      ${addr.addressLine1}<br />
+      ${addr.addressLine2 ? `${addr.addressLine2}<br />` : ''}
+      ${addr.city}, ${addr.state} ${addr.postalCode}<br />
+      ${addr.phone}
     </p>`
     : '';
 
