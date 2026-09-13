@@ -9,22 +9,13 @@ const hasSentryDsn = Boolean(
 );
 
 // Content-Security-Policy — minimum viable for this stack.
-// Tighten over time with nonces/hashes for inline scripts.
 const cspDirectives = [
   `default-src 'self'`,
-  // Vercel Blob (product images + preview thumbnails), Unsplash (dev only), data URIs for canvas exports
   `img-src 'self' data: blob: https://*.blob.vercel-storage.com https://images.unsplash.com`,
-  // Google Fonts + Vercel Blob
   `font-src 'self' data: https://fonts.gstatic.com`,
-  // Inline styles are required by Next.js and Radix UI
   `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
-  // Inline scripts are required by Next.js runtime; GA; Stripe.js (optional)
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} https://www.googletagmanager.com https://www.google-analytics.com https://js.stripe.com`,
-  // API calls + Upstash + GA + Blob + Sentry + Stripe (optional)
-  // Sentry's ingest endpoint is per-org: https://o<org>.ingest.sentry.io
-  // The wildcard covers sentry.io SaaS; if you self-host Sentry, replace with your domain.
   `connect-src 'self' https://*.google-analytics.com https://*.blob.vercel-storage.com https://*.upstash.io https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://*.ingest.de.sentry.io https://api.stripe.com${isDev ? ' ws: http://localhost:*' : ''}`,
-  // Stripe checkout iframe (optional)
   `frame-src 'self' https://checkout.stripe.com https://js.stripe.com`,
   `form-action 'self'`,
   `base-uri 'self'`,
@@ -40,17 +31,21 @@ const nextConfig = {
   compress: true,
   productionBrowserSourceMaps: false,
 
-  // Next 15 native replacement for webpack externals.
+  // ✅ ONLY server-only packages that must not be bundled.
+  //    Removed 'konva' and 'react-konva' — they need to be bundled normally
+  //    on the client. They are loaded dynamically with ssr:false on the
+  //    customizer route, so the server never tries to SSR them.
   serverExternalPackages: [
-    'konva',
-    'react-konva',
     'file-type',
     'image-size',
   ],
 
+  // ✅ Let webpack process react-konva's ESM output for the client bundle.
+  //    react-konva 18.2.x ships ESM that needs Next.js's transform pipeline.
+  transpilePackages: ['konva', 'react-konva'],
+
   images: {
     formats: ['image/avif', 'image/webp'],
-    // Next 15.5+ requires explicit qualities if you use the `quality` prop
     qualities: [75, 90],
     remotePatterns: [
       { protocol: 'https', hostname: '*.blob.vercel-storage.com', pathname: '/**' },
@@ -92,10 +87,10 @@ const nextConfig = {
   },
 
   webpack: (config, { isServer, nextRuntime }) => {
-    // Belt-and-suspenders: alias `canvas` in case any dep requires it at
-    // module load time. serverExternalPackages handles resolution; this
-    // handles the import path.
-    if (isServer) {
+    // ✅ Alias `canvas` ONLY on the Node.js server runtime — this is where
+    //    Konva tries to load the native module. The edge runtime and the
+    //    client bundle must NOT use this stub.
+    if (isServer && nextRuntime === 'nodejs') {
       config.resolve.alias = {
         ...config.resolve.alias,
         canvas: path.resolve(process.cwd(), 'src/lib/canvas-stub.ts'),
@@ -103,8 +98,7 @@ const nextConfig = {
     }
 
     // Silence jose's CompressionStream/DecompressionStream warnings in the
-    // Edge runtime. Auth.js does not use JWE compression by default, so the
-    // flagged code path never executes.
+    // Edge runtime. Auth.js does not use JWE compression by default.
     if (nextRuntime === 'edge') {
       config.ignoreWarnings = [
         ...(config.ignoreWarnings ?? []),
@@ -144,18 +138,15 @@ if (hasSentryDsn) {
 
     silent: !hasSentryToken,
 
-    // Prevent the clientReferenceManifest build conflict in Next 15.
     disableServerWebpackPlugin: !hasSentryToken,
     disableClientWebpackPlugin: !hasSentryToken,
 
     widenClientFileUpload: false,
 
-    // v10: replaces the deprecated `hideSourceMaps`
     sourcemaps: {
       deleteSourcemapsAfterUpload: true,
     },
 
-    // v10: replaces the deprecated `disableLogger`.
     webpack: {
       treeshake: {
         removeDebugLogging: true,

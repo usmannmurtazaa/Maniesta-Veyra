@@ -51,6 +51,17 @@ export function ProductCardClient({
         headers: { 'Content-Type': 'application/json' },
         body: method === 'POST' ? JSON.stringify({ productId: id }) : undefined,
       });
+
+      // Not logged in → redirect to login with a return URL
+      if (res.status === 401) {
+        toast({
+          title: 'Sign in to save items',
+          description: 'Create an account or sign in to use your wishlist.',
+        });
+        router.push(`/auth/login?redirect=/products/${slug}`);
+        return;
+      }
+
       if (res.ok) {
         setWishlisted(!wishlisted);
         toast({
@@ -61,7 +72,7 @@ export function ProductCardClient({
         const result = await res.json().catch(() => null);
         toast({
           title: 'Could not update wishlist',
-          description: result?.error?.message ?? 'Please sign in and try again.',
+          description: result?.error?.message ?? 'Please try again.',
           variant: 'destructive',
         });
       }
