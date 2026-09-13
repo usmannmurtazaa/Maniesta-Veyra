@@ -85,7 +85,7 @@ export default function TermsPage() {
               6. Website use
             </h2>
             <p className="mt-3 text-mv-text-secondary">
-              You agree not to abuse the site — including attempts to breach
+              You agree not to abuse the site - including attempts to breach
               security, scrape pricing or inventory, place fraudulent orders, or
               interfere with other users. Accounts that violate these terms may
               be suspended.
@@ -95,8 +95,8 @@ export default function TermsPage() {
               7. Intellectual property
             </h2>
             <p className="mt-3 text-mv-text-secondary">
-              All content on this site — including the brand name, logos,
-              product photography, and copy — is owned by Maniesta Veyra unless
+              All content on this site - including the brand name, logos,
+              product photography, and copy - is owned by Maniesta Veyra unless
               stated otherwise. You may not reuse it without permission.
             </p>
 
@@ -123,8 +123,8 @@ export default function TermsPage() {
             </h2>
             <p className="mt-3 text-mv-text-secondary">
               Questions about these terms? Email{' '}
-              <a href="mailto:orders@maniestaveyra.com" className="text-mv-accent underline-offset-4 hover:underline">
-                orders@maniestaveyra.com
+              <a href="mailto:maniestaveyra@gmail.com" className="text-mv-accent underline-offset-4 hover:underline">
+                maniestaveyra@gmail.com
               </a>
               .
             </p>

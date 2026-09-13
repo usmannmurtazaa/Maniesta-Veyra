@@ -26,7 +26,7 @@ export default function ReturnsPage() {
             <p className="mt-3 text-mv-text-secondary">
               Ready-made items can be exchanged within <strong>14 days</strong>{' '}
               of delivery if they are unworn, unwashed, and still have the
-              original tags attached. We do not offer cash refunds at this time —
+              original tags attached. We do not offer cash refunds at this time -
               exchanges or store credit only.
             </p>
 
@@ -58,9 +58,9 @@ export default function ReturnsPage() {
               How to start a return
             </h2>
             <ol className="mt-4 space-y-2 text-mv-text-secondary list-decimal pl-6">
-              <li>Email us at <a href="mailto:orders@maniestaveyra.com" className="text-mv-accent underline-offset-4 hover:underline">orders@maniestaveyra.com</a> within the return window.</li>
+              <li>Email us at <a href="mailto:maniestaveyra@gmail.com" className="text-mv-accent underline-offset-4 hover:underline">maniestaveyra@gmail.com</a> within the return window.</li>
               <li>Include your order number and a brief reason for the return.</li>
-              <li>Wait for our confirmation — we will send you the return address and instructions.</li>
+              <li>Wait for our confirmation - we will send you the return address and instructions.</li>
               <li>Ship the item back within 7 days of confirmation.</li>
             </ol>
 

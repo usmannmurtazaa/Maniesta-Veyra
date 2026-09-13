@@ -21,7 +21,7 @@ export const metadata = {
 
 export default function ContactPage() {
   const serverEnv = getServerEnv();
-  const supportEmail = serverEnv.EMAIL_FROM ?? 'orders@maniestaveyra.com';
+  const supportEmail = serverEnv.EMAIL_FROM ?? 'maniestaveyra@gmail.com';
 
   return (
     <>

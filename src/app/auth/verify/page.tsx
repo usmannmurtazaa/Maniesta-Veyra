@@ -185,10 +185,10 @@ function VerifyEmailContent() {
           If your link has expired, sign in to your account and we&rsquo;ll
           send a fresh one, or contact us at{' '}
           <a
-            href="mailto:orders@maniestaveyra.com"
+            href="mailto:maniestaveyra@gmail.com"
             className="text-mv-accent underline-offset-4 hover:underline"
           >
-            orders@maniestaveyra.com
+            maniestaveyra@gmail.com
           </a>
           .
         </p>

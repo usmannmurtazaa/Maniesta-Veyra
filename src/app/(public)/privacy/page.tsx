@@ -30,10 +30,10 @@ export default function PrivacyPage() {
               Information we collect
             </h2>
             <ul className="mt-3 space-y-2 text-mv-text-secondary list-disc pl-6">
-              <li>Account details you provide — name, email, phone number, and password.</li>
-              <li>Order details — shipping address, items purchased, and payment method.</li>
+              <li>Account details you provide - name, email, phone number, and password.</li>
+              <li>Order details - shipping address, items purchased, and payment method.</li>
               <li>Custom design files you upload to our print studio.</li>
-              <li>Technical data — IP address, browser type, and pages visited for analytics.</li>
+              <li>Technical data - IP address, browser type, and pages visited for analytics.</li>
             </ul>
 
             <h2 className="mt-10 font-display text-xl font-bold text-mv-text">
@@ -72,7 +72,7 @@ export default function PrivacyPage() {
               We use industry-standard security measures to protect your
               information, including encrypted connections (HTTPS) and secure
               password storage. No online system is completely immune to
-              attack — if you ever suspect your account is compromised, contact
+              attack - if you ever suspect your account is compromised, contact
               us immediately.
             </p>
 
@@ -82,8 +82,8 @@ export default function PrivacyPage() {
             <p className="mt-3 text-mv-text-secondary">
               You can request a copy of the personal data we hold about you, ask
               us to correct it, or ask us to delete it. To do so, email{' '}
-              <a href="mailto:orders@maniestaveyra.com" className="text-mv-accent underline-offset-4 hover:underline">
-                orders@maniestaveyra.com
+              <a href="mailto:maniestaveyra@gmail.com" className="text-mv-accent underline-offset-4 hover:underline">
+                maniestaveyra@gmail.com
               </a>
               .
             </p>

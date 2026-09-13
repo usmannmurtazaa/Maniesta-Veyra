@@ -35,7 +35,7 @@ const FAQ_SECTIONS = [
       },
       {
         q: 'How do I know my size?',
-        a: 'Our drop shoulder shirts have a relaxed fit. If you normally wear M in a regular-fit tee, we recommend the same size for drop shoulder pieces — the shoulder seam sits lower by design. If you prefer an even looser fit, size up.',
+        a: 'Our drop shoulder shirts have a relaxed fit. If you normally wear M in a regular-fit tee, we recommend the same size for drop shoulder pieces - the shoulder seam sits lower by design. If you prefer an even looser fit, size up.',
       },
       {
         q: 'Do the shirts shrink after washing?',
@@ -69,7 +69,7 @@ const FAQ_SECTIONS = [
       },
       {
         q: 'How do I start an exchange?',
-        a: 'Contact us at orders@maniestaveyra.com with your order number and a short description of the issue. We will guide you through the next steps.',
+        a: 'Contact us at maniestaveyra@gmail.com with your order number and a short description of the issue. We will guide you through the next steps.',
       },
     ],
   },
@@ -78,7 +78,7 @@ const FAQ_SECTIONS = [
     questions: [
       {
         q: 'What can I print on a shirt?',
-        a: 'You can upload your own artwork — logos, illustrations, photos, or text. We print using direct-to-garment (DTG) for small runs and screen printing for larger orders.',
+        a: 'You can upload your own artwork - logos, illustrations, photos, or text. We print using direct-to-garment (DTG) for small runs and screen printing for larger orders.',
       },
       {
         q: 'Is there a minimum order for custom printing?',

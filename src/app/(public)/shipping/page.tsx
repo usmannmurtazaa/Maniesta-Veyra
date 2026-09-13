@@ -82,8 +82,8 @@ export default function ShippingPage() {
             <p className="mt-3 text-mv-text-secondary">
               If your order has not arrived within the estimated window, or if
               it arrives damaged, contact us at{' '}
-              <a href="mailto:orders@maniestaveyra.com" className="text-mv-accent underline-offset-4 hover:underline">
-                orders@maniestaveyra.com
+              <a href="mailto:maniestaveyra@gmail.com" className="text-mv-accent underline-offset-4 hover:underline">
+                maniestaveyra@gmail.com
               </a>{' '}
               with your order number and we will make it right.
             </p>

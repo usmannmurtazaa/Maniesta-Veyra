@@ -10,7 +10,7 @@ export class EmailService {
   constructor() {
     const env = getServerEnv();
     this.resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null;
-    this.from = env.EMAIL_FROM || 'no-reply@maniestaveyra.com';
+    this.from = env.EMAIL_FROM || 'no-reply@maniestaveyra@gmail.com';
   }
 
   async sendVerificationEmail(to: string, token: string) {
