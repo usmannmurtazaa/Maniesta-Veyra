@@ -21,7 +21,11 @@ const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST,
   skipWaiting: true,
   clientsClaim: true,
-  navigationPreload: true,
+
+  // Disabled: we do not consume `event.preloadResponse`. Enabling this
+  // without using it produces "navigation preload request was cancelled"
+  // warnings on every navigation.
+  navigationPreload: false,
 
   fallbacks: {
     entries: [
@@ -33,18 +37,40 @@ const serwist = new Serwist({
   },
 
   runtimeCaching: [
-    // ----------------------------------------------------------------
-    // Custom overrides — must come BEFORE defaultCache so they win.
-    // Serwist matches top-to-bottom and stops at the first match.
-    // ----------------------------------------------------------------
+    // -----------------------------------------------------------------
+    // 1. Next.js image optimization (/_next/image?url=...)
+    //    DO NOT cache these. The optimizer already sends long
+    //    Cache-Control headers that the browser respects. Caching here
+    //    causes failures when the underlying source image is missing.
+    // -----------------------------------------------------------------
+    {
+      matcher: ({ url }) => url.pathname.startsWith('/_next/image'),
+      handler: new NetworkOnly(),
+    },
 
-    // 1. Private API routes — never cache
+    // -----------------------------------------------------------------
+    // 2. React Server Component payloads (?_rsc=...)
+    //    These are per-user and short-lived. Caching them causes
+    //    hydration mismatches. Also: when the user is logged out,
+    //    the server redirects and the fetch returns HTML — putting
+    //    that in the cache breaks subsequent RSC fetches.
+    // -----------------------------------------------------------------
+    {
+      matcher: ({ url }) => url.searchParams.has('_rsc'),
+      handler: new NetworkOnly(),
+    },
+
+    // -----------------------------------------------------------------
+    // 3. API routes — always hit the network
+    // -----------------------------------------------------------------
     {
       matcher: ({ url }) => url.pathname.startsWith('/api/'),
       handler: new NetworkOnly(),
     },
 
-    // 2. Private page routes — never cache the document
+    // -----------------------------------------------------------------
+    // 4. Private page routes — never cache
+    // -----------------------------------------------------------------
     {
       matcher: ({ url }) =>
         /^\/(account|checkout|cart|admin|wishlist|auth|customize)(\/|$)/.test(
@@ -53,26 +79,11 @@ const serwist = new Serwist({
       handler: new NetworkOnly(),
     },
 
-    // 3. Public documents — NetworkFirst with 5s timeout.
-    //    When the server returns 5xx OR the request times out, Serwist
-    //    falls through to the `fallbacks` entry above (serves /offline.html)
-    //    instead of showing the browser's crash page.
-    //    Only 200 responses are cached (cacheableResponse statuses below).
-    {
-      matcher: ({ request }) => request.destination === 'document',
-      handler: new NetworkFirst({
-        cacheName: 'mv-documents',
-        networkTimeoutSeconds: 5,
-        plugins: [
-          new CacheableResponsePlugin({
-            // Do NOT cache 5xx or 404 responses
-            statuses: [200],
-          }),
-        ],
-      }),
-    },
-
-    // 4. Vercel Blob product images — long-lived cache
+    // -----------------------------------------------------------------
+    // 5. Vercel Blob images — long-lived cache.
+    //    Only 200 (same-origin) and 0 (opaque, cross-origin without CORS)
+    //    are cached. 404/500 responses pass through uncached.
+    // -----------------------------------------------------------------
     {
       matcher: ({ url }) => url.hostname.endsWith('.blob.vercel-storage.com'),
       handler: new CacheFirst({
@@ -82,14 +93,14 @@ const serwist = new Serwist({
             maxEntries: 200,
             maxAgeSeconds: 60 * 60 * 24 * 7,
           }),
-          new CacheableResponsePlugin({
-            statuses: [0, 200],
-          }),
+          new CacheableResponsePlugin({ statuses: [0, 200] }),
         ],
       }),
     },
 
-    // 5. GA4 — fail fast when offline
+    // -----------------------------------------------------------------
+    // 6. GA4 — fail fast when offline, don't block navigation
+    // -----------------------------------------------------------------
     {
       matcher: ({ url }) => url.hostname === 'www.googletagmanager.com',
       handler: new NetworkFirst({
@@ -98,10 +109,11 @@ const serwist = new Serwist({
       }),
     },
 
-    // ----------------------------------------------------------------
-    // Default Serwist rules — Next.js chunks, fonts, RSC payloads.
-    // These never run for documents because rule #3 matches first.
-    // ----------------------------------------------------------------
+    // -----------------------------------------------------------------
+    // 7. Default Serwist rules (Next.js chunks, fonts, static assets)
+    //    Our earlier rules already excluded images, RSC, API, and
+    //    private routes, so `defaultCache` only handles safe content.
+    // -----------------------------------------------------------------
     ...defaultCache,
   ],
 });
