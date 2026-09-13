@@ -86,16 +86,15 @@ export default async function HomePage() {
           <div className="order-1 md:order-2">
             <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-mv-bg-alt">
               {heroProduct?.images?.[0]?.url ? (
-                
 
-  <Image
-    src="/images/hero.jpg"
-    alt="Maniesta Veyra — drop shoulder collection"
-    fill
-    priority
-    sizes="(max-width: 768px) 100vw, 50vw"
-    className="object-cover"
-  />
+                <Image
+                  src="/images/hero.jpg"
+                  alt="Maniesta Veyra — drop shoulder collection"
+                  fill
+                  priority
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="object-cover"
+                />
               ) : (
                 <div className="flex h-full items-center justify-center text-mv-muted">
                   <span className="text-sm">Hero image</span>
