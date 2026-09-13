@@ -5,7 +5,7 @@ import Link from 'next/link';
 export const metadata = {
   title: 'Returns & Exchanges | Maniesta Veyra',
   description:
-    'Return and exchange policy for Maniesta Veyra orders — including custom-printed items.',
+    'Return and exchange policy for Maniesta Veyra orders - including custom-printed items.',
 };
 
 export default function ReturnsPage() {

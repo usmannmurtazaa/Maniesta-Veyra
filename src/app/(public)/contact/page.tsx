@@ -33,7 +33,7 @@ export default function ContactPage() {
             <Reveal>
               <PageHeader
                 title="Get in Touch"
-                subtitle="Questions, custom orders, or feedback — we’re here to help."
+                subtitle="Questions, custom orders, or feedback - we’re here to help."
               />
             </Reveal>
           </Container>

@@ -56,7 +56,7 @@ const FAQ_SECTIONS = [
       },
       {
         q: 'How much does shipping cost?',
-        a: 'Shipping is calculated at checkout. Orders over a threshold ship free — the exact threshold is shown in your cart.',
+        a: 'Shipping is calculated at checkout. Orders over a threshold ship free - the exact threshold is shown in your cart.',
       },
     ],
   },
@@ -86,11 +86,11 @@ const FAQ_SECTIONS = [
       },
       {
         q: 'Can I preview my design before ordering?',
-        a: 'Yes. Our customizer lets you upload your design, position it on the shirt, and see a live preview before you add it to your cart.',
+        a: 'Yes, Our customizer lets you upload your design, position it on the shirt, and see a live preview before you add it to your cart.',
       },
       {
         q: 'Do custom-printed shirts take longer to ship?',
-        a: 'Yes — custom orders go through a review step before production. Expect 5–7 business days for custom items, plus shipping time.',
+        a: 'Yes, custom orders go through a review step before production. Expect 5–7 business days for custom items, plus shipping time.',
       },
     ],
   },

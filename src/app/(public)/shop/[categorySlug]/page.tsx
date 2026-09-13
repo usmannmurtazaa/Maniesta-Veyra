@@ -10,12 +10,16 @@ import { SortDropdown } from '@/components/filters/sort-dropdown';
 import { EmptyState } from '@/components/shared/empty-state';
 
 interface CategoryPageProps {
-  params: { categorySlug: string };
-  searchParams: { [key: string]: string | string[] | undefined };
+  // Next.js 15: params and searchParams are Promises
+  params: Promise<{ categorySlug: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 export async function generateMetadata({ params }: CategoryPageProps) {
-  const name = params.categorySlug.replace(/-/g, ' ');
+  // Must await params before reading from it
+  const { categorySlug } = await params;
+  const name = categorySlug.replace(/-/g, ' ');
+
   return {
     title: `${name.charAt(0).toUpperCase() + name.slice(1)} | Maniesta Veyra`,
     description: `Shop ${name} at Maniesta Veyra.`,
@@ -26,9 +30,15 @@ export default async function CategoryPage({
   params,
   searchParams,
 }: CategoryPageProps) {
+  // Resolve both promises in parallel
+  const [{ categorySlug }, resolvedSearchParams] = await Promise.all([
+    params,
+    searchParams,
+  ]);
+
   const query = productQuerySchema.parse({
-    ...searchParams,
-    category: params.categorySlug,
+    ...resolvedSearchParams,
+    category: categorySlug,
   });
 
   const [productsResult, categories] = await Promise.all([
@@ -37,7 +47,7 @@ export default async function CategoryPage({
   ]);
 
   const { data: products, pagination } = productsResult;
-  const categoryName = params.categorySlug.replace(/-/g, ' ');
+  const categoryName = categorySlug.replace(/-/g, ' ');
 
   return (
     <Container className="py-8 md:py-12">
@@ -75,6 +85,8 @@ export default async function CategoryPage({
             <EmptyState
               title="No products in this category"
               description="Try browsing the full collection instead."
+              actionLabel="Browse all products"
+              actionHref="/shop"
             />
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
@@ -91,6 +103,9 @@ export default async function CategoryPage({
                       : undefined
                   }
                   imageUrl={product.images[0]?.url}
+                  secondaryImageUrl={product.images[1]?.url}
+                  categoryName={product.category?.name}
+                  inStock={product.variants.some((v) => v.stock > 0)}
                   badge={
                     product.compareAtPrice
                       ? 'Sale'
@@ -108,7 +123,7 @@ export default async function CategoryPage({
               <Pagination
                 currentPage={pagination.page}
                 totalPages={pagination.totalPages}
-                basePath={`/shop/${params.categorySlug}`}
+                basePath={`/shop/${categorySlug}`}
               />
             </div>
           )}

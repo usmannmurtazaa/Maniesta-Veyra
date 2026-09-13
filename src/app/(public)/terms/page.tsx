@@ -15,7 +15,7 @@ export default function TermsPage() {
           <SectionHeading
             eyebrow="Legal"
             title="Terms of service"
-            subtitle="Last updated: December 2025"
+            subtitle="Last updated: September 2026"
           />
 
           <div className="prose prose-neutral mt-10 max-w-none">
@@ -57,7 +57,7 @@ export default function TermsPage() {
               4. Returns
             </h2>
             <p className="mt-3 text-mv-text-secondary">
-              Returns are governed by our Returns & Exchanges policy. Custom-
+              Returns are governed by our Returns & Exchanges policy. Custom -
               printed items cannot be returned unless defective. Please review
               the design carefully in the customizer before ordering.
             </p>

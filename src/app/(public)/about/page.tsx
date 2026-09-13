@@ -34,7 +34,7 @@ export default function AboutPage() {
               <div className="space-y-5 text-mv-text-secondary">
                 <p className="text-lg">
                   {publicEnv.NEXT_PUBLIC_APP_NAME} makes everyday clothing. We
-                  started with one product — the drop shoulder shirt — because
+                  started with one product - the drop shoulder shirt - because
                   it&apos;s the piece we wear most and the one worth getting
                   right first.
                 </p>
@@ -60,7 +60,7 @@ export default function AboutPage() {
                   <p>
                     Right now, our range focuses on drop shoulder shirts in a
                     small set of colors and sizes. The fit is relaxed, the
-                    shoulders are dropped, and the hem is straight — designed to
+                    shoulders are dropped, and the hem is straight - designed to
                     sit clean over denim, joggers, or tailored trousers.
                   </p>
                   <p>
@@ -87,7 +87,7 @@ export default function AboutPage() {
                   <p>
                     The editor lets you move, scale, and rotate your design on
                     the front, back, or sleeves. You see the price update as you
-                    go — no surprises at checkout.
+                    go - no surprises at checkout.
                   </p>
                 </div>
                 <Link href="/custom-shirts" className="mt-6 inline-block">
@@ -124,7 +124,7 @@ export default function AboutPage() {
                   <p className="mt-2 text-mv-text-secondary">
                     Everything we sell is made in small runs so we can check
                     quality before it ships. Fabric weights and materials are
-                    listed on every product page — no vague claims.
+                    listed on every product page - no vague claims.
                   </p>
                 </div>
                 <div>

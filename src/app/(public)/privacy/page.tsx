@@ -15,7 +15,7 @@ export default function PrivacyPage() {
           <SectionHeading
             eyebrow="Legal"
             title="Privacy policy"
-            subtitle="Last updated: December 2025"
+            subtitle="Last updated: September 2026"
           />
 
           <div className="prose prose-neutral mt-10 max-w-none">

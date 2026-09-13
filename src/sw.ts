@@ -37,6 +37,25 @@ const serwist = new Serwist({
   },
 
   runtimeCaching: [
+    // =================================================================
+    // 0. DOCUMENT NAVIGATIONS — must be FIRST.
+    //
+    // Never cache HTML. Next.js App Router emits HTML that's tightly
+    // coupled to the current JS chunk hashes and font class names.
+    // Serving a stale document against new JS causes React hydration
+    // error #418 on the <html> element.
+    //
+    // The `fallbacks` entry above still serves /offline.html when the
+    // network is truly unavailable, so we don't lose offline support.
+    // =================================================================
+    {
+      matcher: ({ request, url }) =>
+        request.destination === 'document' ||
+        request.headers.get('accept')?.includes('text/html') ||
+        url.searchParams.has('_rsc'),
+      handler: new NetworkOnly(),
+    },
+
     // -----------------------------------------------------------------
     // 1. Next.js image optimization (/_next/image?url=...)
     //    DO NOT cache these. The optimizer already sends long
@@ -49,19 +68,7 @@ const serwist = new Serwist({
     },
 
     // -----------------------------------------------------------------
-    // 2. React Server Component payloads (?_rsc=...)
-    //    These are per-user and short-lived. Caching them causes
-    //    hydration mismatches. Also: when the user is logged out,
-    //    the server redirects and the fetch returns HTML — putting
-    //    that in the cache breaks subsequent RSC fetches.
-    // -----------------------------------------------------------------
-    {
-      matcher: ({ url }) => url.searchParams.has('_rsc'),
-      handler: new NetworkOnly(),
-    },
-
-    // -----------------------------------------------------------------
-    // 3. API routes — always hit the network
+    // 2. API routes — always hit the network
     // -----------------------------------------------------------------
     {
       matcher: ({ url }) => url.pathname.startsWith('/api/'),
@@ -69,7 +76,7 @@ const serwist = new Serwist({
     },
 
     // -----------------------------------------------------------------
-    // 4. Private page routes — never cache
+    // 3. Private page routes — never cache
     // -----------------------------------------------------------------
     {
       matcher: ({ url }) =>
@@ -80,7 +87,7 @@ const serwist = new Serwist({
     },
 
     // -----------------------------------------------------------------
-    // 5. Vercel Blob images — long-lived cache.
+    // 4. Vercel Blob images — long-lived cache.
     //    Only 200 (same-origin) and 0 (opaque, cross-origin without CORS)
     //    are cached. 404/500 responses pass through uncached.
     // -----------------------------------------------------------------
@@ -99,7 +106,7 @@ const serwist = new Serwist({
     },
 
     // -----------------------------------------------------------------
-    // 6. GA4 — fail fast when offline, don't block navigation
+    // 5. GA4 — fail fast when offline, don't block navigation
     // -----------------------------------------------------------------
     {
       matcher: ({ url }) => url.hostname === 'www.googletagmanager.com',
@@ -110,9 +117,9 @@ const serwist = new Serwist({
     },
 
     // -----------------------------------------------------------------
-    // 7. Default Serwist rules (Next.js chunks, fonts, static assets)
-    //    Our earlier rules already excluded images, RSC, API, and
-    //    private routes, so `defaultCache` only handles safe content.
+    // 6. Default Serwist rules (Next.js chunks, fonts, static assets).
+    //    Documents, RSC, API, images, and private routes are all matched
+    //    above, so `defaultCache` only handles safe content here.
     // -----------------------------------------------------------------
     ...defaultCache,
   ],

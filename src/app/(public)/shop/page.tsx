@@ -18,11 +18,15 @@ export const metadata = {
 };
 
 interface ShopPageProps {
-  searchParams: { [key: string]: string | string[] | undefined };
+  // Next.js 15: searchParams is a Promise
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 export default async function ShopPage({ searchParams }: ShopPageProps) {
-  const parsed = productQuerySchema.parse(searchParams);
+  // Next.js 15: must await before use
+  const resolvedSearchParams = await searchParams;
+  const parsed = productQuerySchema.parse(resolvedSearchParams);
+
   const [productsResult, categories] = await Promise.all([
     productService.getProducts(parsed),
     categoryService.getCategories({}),
