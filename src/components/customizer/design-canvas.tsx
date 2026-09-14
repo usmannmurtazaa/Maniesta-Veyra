@@ -1,122 +1,437 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { Stage, Layer, Image as KonvaImage, Rect, Transformer } from 'react-konva';
-import { useCustomizerStore } from '@/stores/customizer-store';
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+
+import {
+  Stage,
+  Layer,
+  Image as KonvaImage,
+  Rect,
+  Transformer,
+} from 'react-konva';
+
 import type { KonvaEventObject } from 'konva/lib/Node';
 
+import { useCustomizerStore } from '@/stores/customizer-store';
+
+const CANVAS_WIDTH = 500;
+const CANVAS_HEIGHT = 600;
+
+const PRINT_AREA = {
+  x: 150,
+  y: 150,
+  width: 200,
+  height: 300,
+};
+
+const MIN_DESIGN_SIZE = 20;
+const DEFAULT_SCALE = 0.5;
+
 export function DesignCanvas() {
-  const { activeLocation, assets, setAssetConfig } = useCustomizerStore();
-  const [garmentImage, setGarmentImage] = useState<HTMLImageElement | null>(null);
-  const [designImage, setDesignImage] = useState<HTMLImageElement | null>(null);
-  const stageRef = useRef<any>(null);
+  const activeLocation = useCustomizerStore(
+    (state) => state.activeLocation
+  );
+
+  const assets = useCustomizerStore(
+    (state) => state.assets
+  );
+
+  const setAssetConfig = useCustomizerStore(
+    (state) => state.setAssetConfig
+  );
+
+  const [garmentImage, setGarmentImage] =
+    useState<HTMLImageElement | null>(null);
+
+  const [designImage, setDesignImage] =
+    useState<HTMLImageElement | null>(null);
+
   const transformerRef = useRef<any>(null);
   const imageRef = useRef<any>(null);
 
-  const asset = activeLocation ? assets[activeLocation] : undefined;
+  const asset = activeLocation
+    ? assets[activeLocation]
+    : undefined;
 
-  // Load garment image placeholder (we can use a static shirt silhouette)
+  /*
+   * Load garment placeholder.
+   *
+   * This is intentionally handled inside useEffect
+   * so browser APIs are never accessed during SSR.
+   */
   useEffect(() => {
-    const img = new window.Image();
-    img.src = '/images/shirt-placeholder.png'; // we need to provide this image; but if missing, use colored rect.
-    img.crossOrigin = 'anonymous';
-    img.onload = () => setGarmentImage(img);
+    let cancelled = false;
+
+    const image = new window.Image();
+
+    image.crossOrigin = 'anonymous';
+
+    image.onload = () => {
+      if (!cancelled) {
+        setGarmentImage(image);
+      }
+    };
+
+    image.onerror = () => {
+      if (!cancelled) {
+        setGarmentImage(null);
+      }
+    };
+
+    image.src = '/images/shirt-placeholder.png';
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  // Load design image when URL changes
+  /*
+   * Load the user's design image.
+   */
   useEffect(() => {
-    if (asset?.imageUrl) {
-      const img = new window.Image();
-      img.crossOrigin = 'anonymous';
-      img.src = asset.imageUrl;
-      img.onload = () => setDesignImage(img);
-    } else {
-      setDesignImage(null);
+    let cancelled = false;
+
+    setDesignImage(null);
+
+    if (!asset?.imageUrl) {
+      return;
     }
+
+    const image = new window.Image();
+
+    image.crossOrigin = 'anonymous';
+
+    image.onload = () => {
+      if (!cancelled) {
+        setDesignImage(image);
+      }
+    };
+
+    image.onerror = () => {
+      if (!cancelled) {
+        setDesignImage(null);
+      }
+    };
+
+    image.src = asset.imageUrl;
+
+    return () => {
+      cancelled = true;
+    };
   }, [asset?.imageUrl]);
 
+  /*
+   * Attach Transformer to the design image.
+   */
   useEffect(() => {
-    if (transformerRef.current && imageRef.current) {
-      transformerRef.current.nodes([imageRef.current]);
-      transformerRef.current.getLayer().batchDraw();
-    }
-  }, [designImage, activeLocation]);
+    const transformer = transformerRef.current;
+    const imageNode = imageRef.current;
 
-  const handleDragEnd = (e: KonvaEventObject<DragEvent>) => {
-    const node = e.target;
-    setAssetConfig(activeLocation!, {
+    if (
+      !transformer ||
+      !imageNode ||
+      !designImage
+    ) {
+      return;
+    }
+
+    transformer.nodes([imageNode]);
+
+    const layer = transformer.getLayer();
+
+    if (layer) {
+      layer.batchDraw();
+    }
+  }, [
+    designImage,
+    activeLocation,
+  ]);
+
+  /*
+   * Handle dragging.
+   */
+  const handleDragEnd = (
+    event: KonvaEventObject<DragEvent>
+  ) => {
+    if (!activeLocation) {
+      return;
+    }
+
+    const node = event.target;
+
+    setAssetConfig(activeLocation, {
       positionX: node.x(),
       positionY: node.y(),
     });
   };
 
+  /*
+   * Handle resizing and rotation.
+   */
   const handleTransformEnd = () => {
+    if (!activeLocation) {
+      return;
+    }
+
     const node = imageRef.current;
-    if (!node) return;
-    setAssetConfig(activeLocation!, {
+
+    if (!node) {
+      return;
+    }
+
+    const scaleX = Math.abs(node.scaleX());
+    const scaleY = Math.abs(node.scaleY());
+
+    const scale =
+      (scaleX + scaleY) / 2;
+
+    setAssetConfig(activeLocation, {
       positionX: node.x(),
       positionY: node.y(),
-      scale: node.scaleX(),
+      scale,
       rotation: node.rotation(),
     });
   };
 
+  /*
+   * No print location selected.
+   */
+  if (!activeLocation) {
+    return (
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-xl font-semibold">
+            Position Your Design
+          </h2>
+
+          <p className="mt-1 text-sm text-mv-muted">
+            Select a print location to continue.
+          </p>
+        </div>
+
+        <div className="flex min-h-[300px] items-center justify-center rounded-lg border border-mv-border">
+          <p className="text-sm text-mv-muted">
+            Please select a print location first.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold">Position Your Design</h2>
-      <div className="border border-mv-border rounded-lg overflow-hidden">
-        <Stage ref={stageRef} width={500} height={600}>
-          <Layer>
-            {garmentImage ? (
-              <KonvaImage image={garmentImage} width={500} height={600} listening={false} />
-            ) : (
-              <Rect width={500} height={600} fill="#f5f5f0" />
-            )}
-            {/* Printable area outline */}
-            <Rect
-              x={150} y={150} width={200} height={300}
-              stroke="rgba(0,0,0,0.2)" strokeWidth={1} dash={[5,5]} listening={false}
-            />
-            {designImage && asset && (
-              <KonvaImage
-                ref={imageRef}
-                image={designImage}
-                x={asset.positionX}
-                y={asset.positionY}
-                scaleX={asset.scale}
-                scaleY={asset.scale}
-                rotation={asset.rotation}
-                draggable
-                onDragEnd={handleDragEnd}
-                onTransformEnd={handleTransformEnd}
-                dragBoundFunc={(pos) => {
-                  const halfW = (designImage.width * asset.scale) / 2;
-                  const halfH = (designImage.height * asset.scale) / 2;
-                  return {
-                    x: Math.min(Math.max(pos.x, 150 + halfW), 150 + 200 - halfW),
-                    y: Math.min(Math.max(pos.y, 150 + halfH), 150 + 300 - halfH),
-                  };
-                }}
-              />
-            )}
-          </Layer>
-          {designImage && (
-            <Layer>
-              <Transformer
-                ref={transformerRef}
-                rotateEnabled
-                boundBoxFunc={(oldBox, newBox) => {
-                  if (newBox.x < 150 || newBox.y < 150 || newBox.x + newBox.width > 350 || newBox.y + newBox.height > 450) {
-                    return oldBox;
-                  }
-                  return newBox;
-                }}
-              />
-            </Layer>
-          )}
-        </Stage>
+      <div>
+        <h2 className="text-xl font-semibold">
+          Position Your Design
+        </h2>
+
+        <p className="mt-1 text-sm text-mv-muted">
+          Position your design inside the printable
+          area.
+        </p>
       </div>
-      <p className="text-sm text-mv-muted">Drag to move, use handles to resize/rotate. Design must stay inside dashed area.</p>
+
+      <div className="w-full overflow-auto rounded-lg border border-mv-border">
+        <div
+          className="mx-auto"
+          style={{
+            width: CANVAS_WIDTH,
+            height: CANVAS_HEIGHT,
+          }}
+        >
+          <Stage
+            width={CANVAS_WIDTH}
+            height={CANVAS_HEIGHT}
+          >
+            <Layer>
+              {garmentImage ? (
+                <KonvaImage
+                  image={garmentImage}
+                  width={CANVAS_WIDTH}
+                  height={CANVAS_HEIGHT}
+                  listening={false}
+                />
+              ) : (
+                <Rect
+                  width={CANVAS_WIDTH}
+                  height={CANVAS_HEIGHT}
+                  fill="#f5f5f0"
+                  listening={false}
+                />
+              )}
+
+              {/*
+               * Printable area.
+               */}
+              <Rect
+                x={PRINT_AREA.x}
+                y={PRINT_AREA.y}
+                width={PRINT_AREA.width}
+                height={PRINT_AREA.height}
+                stroke="rgba(0,0,0,0.2)"
+                strokeWidth={1}
+                dash={[5, 5]}
+                listening={false}
+              />
+
+              {/*
+               * Design image.
+               */}
+              {designImage && asset && (
+                <KonvaImage
+                  ref={imageRef}
+                  image={designImage}
+                  x={asset.positionX}
+                  y={asset.positionY}
+                  scaleX={
+                    asset.scale || DEFAULT_SCALE
+                  }
+                  scaleY={
+                    asset.scale || DEFAULT_SCALE
+                  }
+                  rotation={asset.rotation || 0}
+                  draggable
+                  onDragEnd={handleDragEnd}
+                  onTransformEnd={handleTransformEnd}
+                  dragBoundFunc={(position) => {
+                    const scale =
+                      asset.scale ||
+                      DEFAULT_SCALE;
+
+                    const halfWidth =
+                      (designImage.width * scale) /
+                      2;
+
+                    const halfHeight =
+                      (designImage.height * scale) /
+                      2;
+
+                    const minX =
+                      PRINT_AREA.x +
+                      halfWidth;
+
+                    const maxX =
+                      PRINT_AREA.x +
+                      PRINT_AREA.width -
+                      halfWidth;
+
+                    const minY =
+                      PRINT_AREA.y +
+                      halfHeight;
+
+                    const maxY =
+                      PRINT_AREA.y +
+                      PRINT_AREA.height -
+                      halfHeight;
+
+                    /*
+                     * If the design is larger than
+                     * the printable area, keep its
+                     * center inside the area instead
+                     * of creating invalid bounds.
+                     */
+                    if (
+                      minX > maxX ||
+                      minY > maxY
+                    ) {
+                      return {
+                        x:
+                          PRINT_AREA.x +
+                          PRINT_AREA.width / 2,
+                        y:
+                          PRINT_AREA.y +
+                          PRINT_AREA.height / 2,
+                      };
+                    }
+
+                    return {
+                      x: Math.min(
+                        Math.max(
+                          position.x,
+                          minX
+                        ),
+                        maxX
+                      ),
+                      y: Math.min(
+                        Math.max(
+                          position.y,
+                          minY
+                        ),
+                        maxY
+                      ),
+                    };
+                  }}
+                />
+              )}
+            </Layer>
+
+            {designImage && asset && (
+              <Layer>
+                <Transformer
+                  ref={transformerRef}
+                  rotateEnabled
+                  enabledAnchors={[
+                    'top-left',
+                    'top-right',
+                    'bottom-left',
+                    'bottom-right',
+                  ]}
+                  keepRatio
+                  boundBoxFunc={(
+                    oldBox,
+                    newBox
+                  ) => {
+                    /*
+                     * Prevent extremely small designs.
+                     */
+                    if (
+                      Math.abs(newBox.width) <
+                        MIN_DESIGN_SIZE ||
+                      Math.abs(newBox.height) <
+                        MIN_DESIGN_SIZE
+                    ) {
+                      return oldBox;
+                    }
+
+                    /*
+                     * Keep transformed design inside
+                     * printable area.
+                     */
+                    if (
+                      newBox.x <
+                        PRINT_AREA.x ||
+                      newBox.y <
+                        PRINT_AREA.y ||
+                      newBox.x +
+                        newBox.width >
+                        PRINT_AREA.x +
+                          PRINT_AREA.width ||
+                      newBox.y +
+                        newBox.height >
+                        PRINT_AREA.y +
+                          PRINT_AREA.height
+                    ) {
+                      return oldBox;
+                    }
+
+                    return newBox;
+                  }}
+                />
+              </Layer>
+            )}
+          </Stage>
+        </div>
+      </div>
+
+      <p className="text-sm text-mv-muted">
+        Drag to move. Use the corner handles to
+        resize or rotate. Your design must remain
+        inside the dashed printable area.
+      </p>
     </div>
   );
 }
