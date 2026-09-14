@@ -15,6 +15,7 @@ import {
 } from 'react-konva';
 
 import type { KonvaEventObject } from 'konva/lib/Node';
+import type Konva from 'konva';
 
 import { useCustomizerStore } from '@/stores/customizer-store';
 
@@ -50,18 +51,23 @@ export function DesignCanvas() {
   const [designImage, setDesignImage] =
     useState<HTMLImageElement | null>(null);
 
-  const transformerRef = useRef<any>(null);
-  const imageRef = useRef<any>(null);
+  const transformerRef =
+    useRef<Konva.Transformer | null>(null);
+
+  const imageRef =
+    useRef<Konva.Image | null>(null);
 
   const asset = activeLocation
     ? assets[activeLocation]
     : undefined;
 
   /*
-   * Load garment placeholder.
+   * ------------------------------------------------------------
+   * Load garment placeholder
+   * ------------------------------------------------------------
    *
-   * This is intentionally handled inside useEffect
-   * so browser APIs are never accessed during SSR.
+   * This runs only in the browser.
+   * window.Image() is intentionally kept inside useEffect.
    */
   useEffect(() => {
     let cancelled = false;
@@ -90,7 +96,9 @@ export function DesignCanvas() {
   }, []);
 
   /*
-   * Load the user's design image.
+   * ------------------------------------------------------------
+   * Load user's design image
+   * ------------------------------------------------------------
    */
   useEffect(() => {
     let cancelled = false;
@@ -98,7 +106,9 @@ export function DesignCanvas() {
     setDesignImage(null);
 
     if (!asset?.imageUrl) {
-      return;
+      return () => {
+        cancelled = true;
+      };
     }
 
     const image = new window.Image();
@@ -125,7 +135,9 @@ export function DesignCanvas() {
   }, [asset?.imageUrl]);
 
   /*
-   * Attach Transformer to the design image.
+   * ------------------------------------------------------------
+   * Attach Transformer to design image
+   * ------------------------------------------------------------
    */
   useEffect(() => {
     const transformer = transformerRef.current;
@@ -152,7 +164,9 @@ export function DesignCanvas() {
   ]);
 
   /*
-   * Handle dragging.
+   * ------------------------------------------------------------
+   * Handle drag
+   * ------------------------------------------------------------
    */
   const handleDragEnd = (
     event: KonvaEventObject<DragEvent>
@@ -170,7 +184,9 @@ export function DesignCanvas() {
   };
 
   /*
-   * Handle resizing and rotation.
+   * ------------------------------------------------------------
+   * Handle transform
+   * ------------------------------------------------------------
    */
   const handleTransformEnd = () => {
     if (!activeLocation) {
@@ -186,8 +202,7 @@ export function DesignCanvas() {
     const scaleX = Math.abs(node.scaleX());
     const scaleY = Math.abs(node.scaleY());
 
-    const scale =
-      (scaleX + scaleY) / 2;
+    const scale = (scaleX + scaleY) / 2;
 
     setAssetConfig(activeLocation, {
       positionX: node.x(),
@@ -198,7 +213,9 @@ export function DesignCanvas() {
   };
 
   /*
-   * No print location selected.
+   * ------------------------------------------------------------
+   * No print location selected
+   * ------------------------------------------------------------
    */
   if (!activeLocation) {
     return (
@@ -247,6 +264,9 @@ export function DesignCanvas() {
             width={CANVAS_WIDTH}
             height={CANVAS_HEIGHT}
           >
+            {/* --------------------------------------------------
+                Garment Layer
+            -------------------------------------------------- */}
             <Layer>
               {garmentImage ? (
                 <KonvaImage
@@ -264,9 +284,7 @@ export function DesignCanvas() {
                 />
               )}
 
-              {/*
-               * Printable area.
-               */}
+              {/* Printable area */}
               <Rect
                 x={PRINT_AREA.x}
                 y={PRINT_AREA.y}
@@ -278,9 +296,9 @@ export function DesignCanvas() {
                 listening={false}
               />
 
-              {/*
-               * Design image.
-               */}
+              {/* ------------------------------------------------
+                  Design Image
+              ------------------------------------------------ */}
               {designImage && asset && (
                 <KonvaImage
                   ref={imageRef}
@@ -296,7 +314,9 @@ export function DesignCanvas() {
                   rotation={asset.rotation || 0}
                   draggable
                   onDragEnd={handleDragEnd}
-                  onTransformEnd={handleTransformEnd}
+                  onTransformEnd={
+                    handleTransformEnd
+                  }
                   dragBoundFunc={(position) => {
                     const scale =
                       asset.scale ||
@@ -329,10 +349,9 @@ export function DesignCanvas() {
                       halfHeight;
 
                     /*
-                     * If the design is larger than
-                     * the printable area, keep its
-                     * center inside the area instead
-                     * of creating invalid bounds.
+                     * If the design is larger than the
+                     * printable area, keep its center
+                     * inside the printable area.
                      */
                     if (
                       minX > maxX ||
@@ -369,18 +388,21 @@ export function DesignCanvas() {
               )}
             </Layer>
 
+            {/* --------------------------------------------------
+                Transformer Layer
+            -------------------------------------------------- */}
             {designImage && asset && (
               <Layer>
                 <Transformer
                   ref={transformerRef}
                   rotateEnabled
+                  keepRatio
                   enabledAnchors={[
                     'top-left',
                     'top-right',
                     'bottom-left',
                     'bottom-right',
                   ]}
-                  keepRatio
                   boundBoxFunc={(
                     oldBox,
                     newBox

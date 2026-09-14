@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import { useCustomizerStore } from '@/stores/customizer-store';
@@ -27,12 +28,26 @@ interface CustomizerWizardProps {
   garments: Garment[];
 }
 
-/*
- * Load each step independently.
+/**
+ * Generic loading state for dynamically loaded customizer steps.
+ */
+function ComponentLoading() {
+  return (
+    <div className="py-16 text-center text-mv-muted">
+      Loading...
+    </div>
+  );
+}
+
+/**
+ * Load each customizer step independently.
  *
- * Important:
- * DesignCanvas uses react-konva, so it MUST NOT be rendered
- * during SSR. ssr:false keeps Konva completely client-side.
+ * DesignCanvas uses react-konva.
+ * It MUST remain client-side only because Konva depends on
+ * browser APIs and React renderer internals.
+ *
+ * ssr:false prevents Next.js from attempting to render it
+ * on the server.
  */
 
 const GarmentSelector = dynamic(
@@ -90,11 +105,14 @@ const DesignUploader = dynamic(
   }
 );
 
-/*
- * IMPORTANT:
- * This is the component that uses react-konva.
+/**
+ * IMPORTANT
  *
- * Never SSR this component.
+ * react-konva is isolated behind a client-only dynamic import.
+ *
+ * This prevents the Konva renderer from being included in
+ * server rendering and helps avoid React hydration/runtime
+ * conflicts such as ReactCurrentBatchConfig.
  */
 const DesignCanvas = dynamic(
   () =>
@@ -137,14 +155,6 @@ const CustomizationPrice = dynamic(
   }
 );
 
-function ComponentLoading() {
-  return (
-    <div className="py-16 text-center text-mv-muted">
-      Loading...
-    </div>
-  );
-}
-
 export function CustomizerWizard({
   garments,
 }: CustomizerWizardProps) {
@@ -157,18 +167,27 @@ export function CustomizerWizard({
     (garment) => garment.id === store.garmentId
   );
 
+  /**
+   * Move to the next customization step.
+   */
   const nextStep = () => {
     if (store.step < 7) {
       store.setStep(store.step + 1);
     }
   };
 
+  /**
+   * Move to the previous customization step.
+   */
   const prevStep = () => {
     if (store.step > 1) {
       store.setStep(store.step - 1);
     }
   };
 
+  /**
+   * Calculate the current customization price.
+   */
   const calculatePrice = async () => {
     if (
       !store.garmentId ||
@@ -231,6 +250,9 @@ export function CustomizerWizard({
     }
   };
 
+  /**
+   * Create the custom design and add it to the cart.
+   */
   const addToCart = async () => {
     if (
       !store.garmentId ||
@@ -250,7 +272,7 @@ export function CustomizerWizard({
     setLoading(true);
 
     try {
-      /*
+      /**
        * Create the custom design first.
        */
       const designRes = await fetch(
@@ -329,8 +351,8 @@ export function CustomizerWizard({
         );
       }
 
-      /*
-       * Add the newly created design to cart.
+      /**
+       * Add the newly created custom design to cart.
        */
       const cartRes = await fetch(
         '/api/cart/items',
@@ -385,7 +407,9 @@ export function CustomizerWizard({
 
   return (
     <div className="space-y-8">
-      {/* Navigation */}
+      {/* ---------------------------------------------------------
+          Navigation
+      --------------------------------------------------------- */}
       <div className="flex items-center justify-between">
         <Button
           variant="ghost"
@@ -422,14 +446,18 @@ export function CustomizerWizard({
         )}
       </div>
 
-      {/* Step Content */}
+      {/* ---------------------------------------------------------
+          Step Content
+      --------------------------------------------------------- */}
       <StepContent
         step={store.step}
         garments={garments}
         selectedGarment={selectedGarment}
       />
 
-      {/* Price */}
+      {/* ---------------------------------------------------------
+          Price
+      --------------------------------------------------------- */}
       {store.step >= 4 && (
         <CustomizationPrice
           onCalculate={calculatePrice}
@@ -495,7 +523,7 @@ function StepContent({
       return <DesignUploader />;
 
     case 6:
-  return <DesignCanvas />;
+      return <DesignCanvas />;
 
     case 7:
       return <CustomizationSummary />;
