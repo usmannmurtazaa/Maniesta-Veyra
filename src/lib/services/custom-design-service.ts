@@ -1,6 +1,5 @@
 import { prisma } from '@/lib/db/prisma';
 import { PrintLocation } from '@prisma/client';
-import { uploadToPrivateBucket } from '@/lib/storage/upload';
 
 interface DesignAssetInput {
   printLocation: PrintLocation;

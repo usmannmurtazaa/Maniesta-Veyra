@@ -12,15 +12,8 @@ interface Garment {
   id: string;
   name: string;
   basePrice: number | string;
-  colors: Array<{
-    id: string;
-    name: string;
-    hexCode: string;
-  }>;
-  sizes: Array<{
-    id: string;
-    label: string;
-  }>;
+  colors: Array<{ id: string; name: string; hexCode: string }>;
+  sizes: Array<{ id: string; label: string }>;
   supportedPrintLocations: string[];
 }
 
@@ -28,59 +21,34 @@ interface CustomizerWizardProps {
   garments: Garment[];
 }
 
-/**
- * Generic loading state for dynamically loaded customizer steps.
- */
 function ComponentLoading() {
   return (
-    <div className="py-16 text-center text-mv-muted">
-      Loading...
-    </div>
+    <div className="py-16 text-center text-mv-muted">Loading…</div>
   );
 }
 
-/**
- * Load each customizer step independently.
- *
- * DesignCanvas uses react-konva.
- * It MUST remain client-side only because Konva depends on
- * browser APIs and React renderer internals.
- *
- * ssr:false prevents Next.js from attempting to render it
- * on the server.
- */
+// ---------------------------------------------------------------------------
+// Dynamically imported steps
+//
+// Every step is client-only. `ssr: false` is not strictly required for the
+// non-canvas steps, but keeping it consistent simplifies reasoning about
+// bundle boundaries. DesignCanvas MUST use ssr:false — Konva depends on
+// browser APIs that do not exist on the server.
+// ---------------------------------------------------------------------------
 
 const GarmentSelector = dynamic(
-  () =>
-    import('./garment-selector').then(
-      (mod) => mod.GarmentSelector
-    ),
-  {
-    ssr: false,
-    loading: () => <ComponentLoading />,
-  }
+  () => import('./garment-selector').then((mod) => mod.GarmentSelector),
+  { ssr: false, loading: () => <ComponentLoading /> }
 );
 
 const ColorSelector = dynamic(
-  () =>
-    import('./color-selector').then(
-      (mod) => mod.ColorSelector
-    ),
-  {
-    ssr: false,
-    loading: () => <ComponentLoading />,
-  }
+  () => import('./color-selector').then((mod) => mod.ColorSelector),
+  { ssr: false, loading: () => <ComponentLoading /> }
 );
 
 const SizeSelector = dynamic(
-  () =>
-    import('./size-selector').then(
-      (mod) => mod.SizeSelector
-    ),
-  {
-    ssr: false,
-    loading: () => <ComponentLoading />,
-  }
+  () => import('./size-selector').then((mod) => mod.SizeSelector),
+  { ssr: false, loading: () => <ComponentLoading /> }
 );
 
 const PrintLocationSelector = dynamic(
@@ -88,42 +56,21 @@ const PrintLocationSelector = dynamic(
     import('./print-location-selector').then(
       (mod) => mod.PrintLocationSelector
     ),
-  {
-    ssr: false,
-    loading: () => <ComponentLoading />,
-  }
+  { ssr: false, loading: () => <ComponentLoading /> }
 );
 
 const DesignUploader = dynamic(
-  () =>
-    import('./design-uploader').then(
-      (mod) => mod.DesignUploader
-    ),
-  {
-    ssr: false,
-    loading: () => <ComponentLoading />,
-  }
+  () => import('./design-uploader').then((mod) => mod.DesignUploader),
+  { ssr: false, loading: () => <ComponentLoading /> }
 );
 
-/**
- * IMPORTANT
- *
- * react-konva is isolated behind a client-only dynamic import.
- *
- * This prevents the Konva renderer from being included in
- * server rendering and helps avoid React hydration/runtime
- * conflicts such as ReactCurrentBatchConfig.
- */
 const DesignCanvas = dynamic(
-  () =>
-    import('./design-canvas').then(
-      (mod) => mod.DesignCanvas
-    ),
+  () => import('./design-canvas').then((mod) => mod.DesignCanvas),
   {
     ssr: false,
     loading: () => (
       <div className="py-16 text-center text-mv-muted">
-        Preparing editor...
+        Preparing editor…
       </div>
     ),
   }
@@ -134,10 +81,7 @@ const CustomizationSummary = dynamic(
     import('./customization-summary').then(
       (mod) => mod.CustomizationSummary
     ),
-  {
-    ssr: false,
-    loading: () => <ComponentLoading />,
-  }
+  { ssr: false, loading: () => <ComponentLoading /> }
 );
 
 const CustomizationPrice = dynamic(
@@ -155,70 +99,45 @@ const CustomizationPrice = dynamic(
   }
 );
 
-export function CustomizerWizard({
-  garments,
-}: CustomizerWizardProps) {
+export function CustomizerWizard({ garments }: CustomizerWizardProps) {
   const router = useRouter();
   const store = useCustomizerStore();
 
   const [loading, setLoading] = useState(false);
+  const [calculatingPrice, setCalculatingPrice] = useState(false);
 
-  const selectedGarment = garments.find(
-    (garment) => garment.id === store.garmentId
-  );
+  const selectedGarment = garments.find((g) => g.id === store.garmentId);
 
-  /**
-   * Move to the next customization step.
-   */
-  const nextStep = () => {
-    if (store.step < 7) {
-      store.setStep(store.step + 1);
-    }
-  };
+  function nextStep() {
+    if (store.step < 7) store.setStep(store.step + 1);
+  }
 
-  /**
-   * Move to the previous customization step.
-   */
-  const prevStep = () => {
-    if (store.step > 1) {
-      store.setStep(store.step - 1);
-    }
-  };
+  function prevStep() {
+    if (store.step > 1) store.setStep(store.step - 1);
+  }
 
-  /**
-   * Calculate the current customization price.
-   */
-  const calculatePrice = async () => {
-    if (
-      !store.garmentId ||
-      store.selectedLocations.length === 0
-    ) {
+  // -------------------------------------------------------------------
+  // Calculate price
+  // -------------------------------------------------------------------
+  async function calculatePrice() {
+    if (!store.garmentId || store.selectedLocations.length === 0) {
       toast({
-        title: 'Error',
-        description:
-          'Please select a garment and at least one print location.',
+        title: 'Missing selection',
+        description: 'Select a garment and at least one print location first.',
         variant: 'destructive',
       });
-
       return;
     }
 
+    setCalculatingPrice(true);
     try {
       const response = await fetch('/api/custom/price', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           garmentId: store.garmentId,
           printLocations: store.selectedLocations,
           quantity: store.quantity,
-          designSqInchesPerLocation: Object.fromEntries(
-            store.selectedLocations.map((location) => [
-              location,
-              0,
-            ])
-          ),
         }),
       });
 
@@ -226,8 +145,7 @@ export function CustomizerWizard({
 
       if (!response.ok) {
         throw new Error(
-          result?.error?.message ||
-            'Failed to calculate price'
+          result?.error?.message ?? 'Failed to calculate price'
         );
       }
 
@@ -236,24 +154,25 @@ export function CustomizerWizard({
         totalPrice: Number(result.data.totalPrice),
       });
     } catch (error) {
-      console.error(
-        'Price calculation failed:',
-        error
-      );
-
+      console.error('[customizer] price calculation failed:', error);
       toast({
-        title: 'Error',
+        title: 'Could not calculate price',
         description:
-          'Failed to calculate the customization price.',
+          error instanceof Error
+            ? error.message
+            : 'Please try again in a moment.',
         variant: 'destructive',
       });
+    } finally {
+      setCalculatingPrice(false);
     }
-  };
+  }
 
-  /**
-   * Create the custom design and add it to the cart.
-   */
-  const addToCart = async () => {
+  // -------------------------------------------------------------------
+  // Add to cart
+  // -------------------------------------------------------------------
+  async function addToCart() {
+    // ---- 1. Basic selections ----
     if (
       !store.garmentId ||
       !store.garmentColorId ||
@@ -261,156 +180,128 @@ export function CustomizerWizard({
       store.selectedLocations.length === 0
     ) {
       toast({
-        title: 'Error',
-        description: 'Please complete all steps.',
+        title: 'Incomplete design',
+        description: 'Please complete every step before adding to cart.',
         variant: 'destructive',
       });
-
       return;
+    }
+
+    // ---- 2. Require artwork on every selected print location ----
+    // The API rejects assets with an empty imageUrl, so we catch this
+    // client-side and point at the specific missing location.
+    const missingArtwork = store.selectedLocations.filter(
+      (loc) => !store.assets[loc]?.imageUrl
+    );
+    if (missingArtwork.length > 0) {
+      const names = missingArtwork
+        .map((l) => l.replace(/_/g, ' ').toLowerCase())
+        .join(', ');
+      toast({
+        title: 'Artwork missing',
+        description: `Please upload a design for: ${names}.`,
+        variant: 'destructive',
+      });
+      store.setStep(5); // jump back to the upload step
+      return;
+    }
+
+    // ---- 3. Require a calculated price ----
+    // If the user skipped "Calculate", run it now so the server records
+    // the correct price. The /api/custom/designs endpoint recomputes
+    // pricing anyway, but calling here keeps the UX honest.
+    if (!store.estimatedPrice) {
+      await calculatePrice();
     }
 
     setLoading(true);
 
     try {
-      /**
-       * Create the custom design first.
-       */
-      const designRes = await fetch(
-        '/api/custom/designs',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            garmentId: store.garmentId,
-            garmentColorId: store.garmentColorId,
-            garmentSizeId: store.garmentSizeId,
-            printLocations: store.selectedLocations,
-            quantity: store.quantity,
-            notes: store.notes,
-
-            unitPrice:
-              store.estimatedPrice?.unitPrice ?? 0,
-
-            totalPrice:
-              store.estimatedPrice?.totalPrice ?? 0,
-
-            assets: store.selectedLocations.map(
-              (location) => ({
-                printLocation: location,
-
-                imageUrl:
-                  store.assets[location]?.imageUrl ?? '',
-
-                fileName:
-                  store.assets[location]?.fileName ??
-                  'design',
-
-                fileSize:
-                  store.assets[location]?.fileSize ?? 0,
-
-                mimeType:
-                  store.assets[location]?.mimeType ??
-                  'image/png',
-
-                imageWidth:
-                  store.assets[location]?.imageWidth,
-
-                imageHeight:
-                  store.assets[location]?.imageHeight,
-
-                positionX:
-                  store.assets[location]?.positionX ??
-                  50,
-
-                positionY:
-                  store.assets[location]?.positionY ??
-                  50,
-
-                scale:
-                  store.assets[location]?.scale ??
-                  0.5,
-
-                rotation:
-                  store.assets[location]?.rotation ??
-                  0,
-              })
-            ),
+      // ---- 4. Create the design (server computes prices) ----
+      const designRes = await fetch('/api/custom/designs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          garmentId: store.garmentId,
+          garmentColorId: store.garmentColorId,
+          garmentSizeId: store.garmentSizeId,
+          printLocations: store.selectedLocations,
+          quantity: store.quantity,
+          notes: store.notes || undefined,
+          // NOTE: unitPrice / totalPrice are intentionally NOT sent.
+          // The server recomputes them from the garment + print pricing.
+          assets: store.selectedLocations.map((location) => {
+            const asset = store.assets[location]!;
+            return {
+              printLocation: location,
+              imageUrl: asset.imageUrl!,
+              fileName: asset.fileName ?? 'design',
+              fileSize: asset.fileSize ?? 0,
+              mimeType: asset.mimeType ?? 'image/png',
+              imageWidth: asset.imageWidth,
+              imageHeight: asset.imageHeight,
+              positionX: asset.positionX ?? 50,
+              positionY: asset.positionY ?? 50,
+              scale: asset.scale ?? 0.5,
+              rotation: asset.rotation ?? 0,
+            };
           }),
-        }
-      );
+        }),
+      });
 
-      const designResult =
-        await designRes.json();
+      const designResult = await designRes.json();
 
       if (!designRes.ok) {
         throw new Error(
-          designResult?.error?.message ||
-            'Failed to create custom design'
+          designResult?.error?.message ?? 'Failed to create custom design'
         );
       }
 
-      /**
-       * Add the newly created custom design to cart.
-       */
-      const cartRes = await fetch(
-        '/api/cart/items',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            customDesignId:
-              designResult.data.id,
-            quantity: store.quantity,
-          }),
-        }
-      );
+      // ---- 5. Add the design to the cart ----
+      const cartRes = await fetch('/api/cart/items', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customDesignId: designResult.data.id,
+          quantity: store.quantity,
+        }),
+      });
 
       if (!cartRes.ok) {
-        const cartResult =
-          await cartRes.json().catch(() => null);
-
+        const cartResult = await cartRes.json().catch(() => null);
         throw new Error(
-          cartResult?.error?.message ||
-            'Failed to add item to cart'
+          cartResult?.error?.message ?? 'Failed to add item to cart'
         );
       }
 
       toast({
         title: 'Added to cart',
-        description:
-          'Your customized product has been added to the cart.',
+        description: 'Your custom design is ready for checkout.',
       });
 
       router.push('/cart');
     } catch (error) {
-      console.error(
-        'Add to cart failed:',
-        error
-      );
-
+      console.error('[customizer] add to cart failed:', error);
       toast({
-        title: 'Error',
+        title: 'Could not add to cart',
         description:
           error instanceof Error
             ? error.message
-            : 'Failed to add to cart.',
+            : 'Please try again in a moment.',
         variant: 'destructive',
       });
     } finally {
       setLoading(false);
     }
-  };
+  }
 
+  // -------------------------------------------------------------------
+  // Render
+  // -------------------------------------------------------------------
   return (
     <div className="space-y-8">
-      {/* ---------------------------------------------------------
-          Navigation
-      --------------------------------------------------------- */}
-      <div className="flex items-center justify-between">
+      {/* Step navigation */}
+      <div className="flex items-center justify-between gap-2">
         <Button
           variant="ghost"
           onClick={prevStep}
@@ -419,7 +310,7 @@ export function CustomizerWizard({
           Back
         </Button>
 
-        <p className="text-sm text-mv-muted">
+        <p className="text-sm text-mv-muted" aria-live="polite">
           Step {store.step} of 7
         </p>
 
@@ -428,39 +319,33 @@ export function CustomizerWizard({
             onClick={nextStep}
             disabled={
               loading ||
-              (store.step === 1 &&
-                !store.garmentId)
+              (store.step === 1 && !store.garmentId) ||
+              (store.step === 2 && !store.garmentColorId) ||
+              (store.step === 3 && !store.garmentSizeId) ||
+              (store.step === 4 && store.selectedLocations.length === 0)
             }
           >
             Next
           </Button>
         ) : (
-          <Button
-            onClick={addToCart}
-            disabled={loading}
-          >
-            {loading
-              ? 'Adding to cart...'
-              : 'Add to Cart'}
+          <Button onClick={addToCart} disabled={loading}>
+            {loading ? 'Adding to cart…' : 'Add to Cart'}
           </Button>
         )}
       </div>
 
-      {/* ---------------------------------------------------------
-          Step Content
-      --------------------------------------------------------- */}
+      {/* Step content */}
       <StepContent
         step={store.step}
         garments={garments}
         selectedGarment={selectedGarment}
       />
 
-      {/* ---------------------------------------------------------
-          Price
-      --------------------------------------------------------- */}
+      {/* Price panel (visible from step 4 onward) */}
       {store.step >= 4 && (
         <CustomizationPrice
           onCalculate={calculatePrice}
+          isCalculating={calculatingPrice}
         />
       )}
     </div>
@@ -480,11 +365,7 @@ function StepContent({
 }: StepContentProps) {
   switch (step) {
     case 1:
-      return (
-        <GarmentSelector
-          garments={garments}
-        />
-      );
+      return <GarmentSelector garments={garments} />;
 
     case 2:
       if (!selectedGarment) {
@@ -494,12 +375,7 @@ function StepContent({
           </div>
         );
       }
-
-      return (
-        <ColorSelector
-          colors={selectedGarment.colors}
-        />
-      );
+      return <ColorSelector colors={selectedGarment.colors} />;
 
     case 3:
       if (!selectedGarment) {
@@ -509,12 +385,7 @@ function StepContent({
           </div>
         );
       }
-
-      return (
-        <SizeSelector
-          sizes={selectedGarment.sizes}
-        />
-      );
+      return <SizeSelector sizes={selectedGarment.sizes} />;
 
     case 4:
       return <PrintLocationSelector />;
@@ -526,7 +397,7 @@ function StepContent({
       return <DesignCanvas />;
 
     case 7:
-      return <CustomizationSummary />;
+      return <CustomizationSummary garment={selectedGarment} />;
 
     default:
       return null;

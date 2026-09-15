@@ -43,7 +43,7 @@ export function DesignUploader() {
       <Button onClick={() => inputRef.current?.click()} disabled={uploading}>
         <Upload className="h-4 w-4" /> {uploading ? 'Uploading...' : 'Upload Design'}
       </Button>
-      <p className="text-sm text-mv-muted">PNG, JPG, WEBP, SVG (max 10 MB)</p>
+      <p className="text-sm text-mv-muted">PNG, JPG, WEBP, SVG (max 5 MB)</p>
     </div>
   );
 }

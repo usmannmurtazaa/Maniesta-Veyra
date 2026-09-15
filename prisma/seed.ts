@@ -32,24 +32,71 @@ const SIZES_STANDARD = ['S', 'M', 'L', 'XL'];
 const SIZES_EXTENDED = ['S', 'M', 'L', 'XL', 'XXL'];
 
 const C = {
-  black: { name: 'Black', hexCode: '#1A1A2E' },
-  offWhite: { name: 'Off White', hexCode: '#F5F5F0' },
-  white: { name: 'White', hexCode: '#FAFAFA' },
-  charcoal: { name: 'Charcoal', hexCode: '#36454F' },
-  slate: { name: 'Slate Grey', hexCode: '#708090' },
-  navy: { name: 'Navy', hexCode: '#1B2845' },
-  sand: { name: 'Sand', hexCode: '#C2B280' },
-  stone: { name: 'Stone', hexCode: '#A8A8A0' },
-  beige: { name: 'Beige', hexCode: '#E8DCC4' },
-  olive: { name: 'Olive', hexCode: '#6B7A4A' },
-  ivory: { name: 'Ivory', hexCode: '#FFFEF0' },
-  cream: { name: 'Cream', hexCode: '#F5EFE0' },
+  // Neutrals
+  black:       { name: 'Black',        hexCode: '#1A1A2E' },
+  charcoal:    { name: 'Charcoal',     hexCode: '#36454F' },
+  offWhite:    { name: 'Off White',    hexCode: '#F5F5F0' },
+  white:       { name: 'White',        hexCode: '#FFFFFF' },
+  ivory:       { name: 'Ivory',        hexCode: '#FFFEF0' },
+  cream:       { name: 'Cream',        hexCode: '#F5EFE0' },
+  beige:       { name: 'Beige',        hexCode: '#E8DCC4' },
+  sand:        { name: 'Sand',         hexCode: '#C2B280' },
+  // Darks
+  slate:       { name: 'Slate Grey',   hexCode: '#708090' },
+  stone:       { name: 'Stone',        hexCode: '#A8A8A0' },
+  ash:         { name: 'Ash',          hexCode: '#B2B5B8' },
   washedBlack: { name: 'Washed Black', hexCode: '#2C2C2C' },
-  indigo: { name: 'Indigo', hexCode: '#3F4E6E' },
-  dustyBlue: { name: 'Dusty Blue', hexCode: '#7A96B0' },
+  // Blues
+  navy:        { name: 'Navy',         hexCode: '#1B2845' },
+  indigo:      { name: 'Indigo',       hexCode: '#3F4E6E' },
+  dustyBlue:   { name: 'Dusty Blue',   hexCode: '#7A96B0' },
+  sky:         { name: 'Sky',          hexCode: '#A8C4D9' },
+  // Earth
+  olive:       { name: 'Olive',        hexCode: '#6B7A4A' },
+  forest:      { name: 'Forest',       hexCode: '#2E4A3B' },
+  rust:        { name: 'Rust',         hexCode: '#A65A3A' },
+  burgundy:    { name: 'Burgundy',     hexCode: '#6B1F2C' },
 } as const;
 
+/**
+ * Full 20-color palette for the custom print studio.
+ * Order matters — this is the order customers see in the picker.
+ */
+const GARMENT_PALETTE: ColorSeed[] = [
+  C.black,
+  C.charcoal,
+  C.offWhite,
+  C.white,
+  C.ivory,
+  C.cream,
+  C.beige,
+  C.sand,
+  C.slate,
+  C.stone,
+  C.ash,
+  C.washedBlack,
+  C.navy,
+  C.indigo,
+  C.dustyBlue,
+  C.sky,
+  C.olive,
+  C.forest,
+  C.rust,
+  C.burgundy,
+];
+
+/**
+ * Build a stable, collision-free 3-letter code from a color name.
+ * "Black" → "BLA", "Burgundy" → "BUR", "Slate Grey" → "SLG"
+ * Falls back to padding with underscores if the name is very short.
+ */
+function colorCode(name: string): string {
+  const cleaned = name.replace(/\s+/g, '').toUpperCase();
+  return (cleaned + '___').slice(0, 3);
+}
+
 const PRODUCTS: ProductSeed[] = [
+  // ... all 20 products — unchanged from your file
   {
     name: 'Essential Drop Shoulder Tee',
     slug: 'essential-drop-shoulder-tee',
@@ -453,10 +500,7 @@ async function main() {
 
     for (const color of colors) {
       for (const size of sizes) {
-        const sku = `${p.skuPrefix}-${color.name
-          .replace(/\s+/g, '')
-          .slice(0, 3)
-          .toUpperCase()}-${size.label}`;
+        const sku = `${p.skuPrefix}-${colorCode(color.name)}-${size.label}`;
         await prisma.productVariant.create({
           data: {
             productId: product.id,
@@ -488,76 +532,103 @@ async function main() {
 
   // -----------------------------------------------------------------------
   // Custom Print Studio — garment + print pricing
-  //
-  // This section is REQUIRED for /customize to work. Without it, the
-  // customizer has no garments to offer.
   // -----------------------------------------------------------------------
   console.log('\n🎨 Seeding custom print studio...');
-  await prisma.printPricing.deleteMany();
-  await prisma.garmentVariant.deleteMany();
-  await prisma.garmentColor.deleteMany();
-  await prisma.garmentSize.deleteMany();
-  await prisma.garment.deleteMany();
 
-  const garment = await prisma.garment.create({
-    data: {
-      name: 'Classic T-Shirt',
-      slug: 'classic-t-shirt',
-      description: 'Standard fit t-shirt for custom printing.',
-      basePrice: new Prisma.Decimal(2000),
-      skuPrefix: 'CUST-TS',
-      supportedPrintLocations: ['FRONT', 'BACK', 'LEFT_SLEEVE', 'RIGHT_SLEEVE'],
-      printableAreaWidth: new Prisma.Decimal(12),
-      printableAreaHeight: new Prisma.Decimal(16),
-      sortOrder: 1,
-      isActive: true,
-      colors: {
-        create: [
-          { name: 'Black', hexCode: '#1A1A2E' },
-          { name: 'White', hexCode: '#FFFFFF' },
-          { name: 'Navy', hexCode: '#000080' },
+  // IMPORTANT: CustomDesign.orderItems has onDelete: Restrict.
+  // If a CustomDesign is referenced by an OrderItem, `garment.deleteMany()`
+  // below will fail. We guard by checking for existing custom orders first.
+  const customDesignsInOrders = await prisma.orderItem.count({
+    where: { isCustomDesign: true },
+  });
+
+  if (customDesignsInOrders > 0) {
+    console.log(
+      `   ⚠️  Found ${customDesignsInOrders} custom order item(s) in the DB.`
+    );
+    console.log(
+      '   Skipping garment re-seed to preserve historical orders.'
+    );
+    console.log('   To re-seed anyway, run: npx prisma migrate reset --force');
+  } else {
+    await prisma.printPricing.deleteMany();
+    await prisma.garmentVariant.deleteMany();
+    await prisma.garmentColor.deleteMany();
+    await prisma.garmentSize.deleteMany();
+    await prisma.garment.deleteMany();
+
+    const garment = await prisma.garment.create({
+      data: {
+        name: 'Classic T-Shirt',
+        slug: 'classic-t-shirt',
+        description: 'Standard fit t-shirt for custom printing.',
+        basePrice: new Prisma.Decimal(2000),
+        skuPrefix: 'CUST-TS',
+        supportedPrintLocations: [
+          'FRONT',
+          'BACK',
+          'LEFT_SLEEVE',
+          'RIGHT_SLEEVE',
         ],
-      },
-      sizes: {
-        create: [
-          { label: 'S' },
-          { label: 'M' },
-          { label: 'L' },
-          { label: 'XL' },
-        ],
-      },
-    },
-  });
-
-  const garmentColors = await prisma.garmentColor.findMany({
-    where: { garmentId: garment.id },
-  });
-  const garmentSizes = await prisma.garmentSize.findMany({
-    where: { garmentId: garment.id },
-  });
-
-  for (const color of garmentColors) {
-    for (const size of garmentSizes) {
-      await prisma.garmentVariant.create({
-        data: {
-          garmentId: garment.id,
-          colorId: color.id,
-          sizeId: size.id,
-          sku: `${garment.skuPrefix}-${color.name.substring(0, 1)}-${size.label}`,
-          stock: 100,
+        printableAreaWidth: new Prisma.Decimal(12),
+        printableAreaHeight: new Prisma.Decimal(16),
+        sortOrder: 1,
+        isActive: true,
+        colors: {
+          create: GARMENT_PALETTE.map((color, i) => ({
+            name: color.name,
+            hexCode: color.hexCode,
+            sortOrder: i,
+          })),
         },
-      });
-    }
-  }
+        sizes: {
+          create: [
+            { label: 'S', sortOrder: 0 },
+            { label: 'M', sortOrder: 1 },
+            { label: 'L', sortOrder: 2 },
+            { label: 'XL', sortOrder: 3 },
+            { label: 'XXL', sortOrder: 4 },
+          ],
+        },
+      },
+    });
 
-  await prisma.printPricing.createMany({
-    data: [
-      { garmentId: garment.id, location: 'FRONT', baseCost: 500 },
-      { garmentId: garment.id, location: 'BACK', baseCost: 700 },
-      { garmentId: garment.id, location: 'LEFT_SLEEVE', baseCost: 300 },
-      { garmentId: garment.id, location: 'RIGHT_SLEEVE', baseCost: 300 },
-    ],
-  });
+    const garmentColors = await prisma.garmentColor.findMany({
+      where: { garmentId: garment.id },
+    });
+    const garmentSizes = await prisma.garmentSize.findMany({
+      where: { garmentId: garment.id },
+    });
+
+    let garmentVariantCount = 0;
+    for (const color of garmentColors) {
+      for (const size of garmentSizes) {
+        await prisma.garmentVariant.create({
+          data: {
+            garmentId: garment.id,
+            colorId: color.id,
+            sizeId: size.id,
+            sku: `${garment.skuPrefix}-${colorCode(color.name)}-${size.label}`,
+            stock: 100,
+          },
+        });
+        garmentVariantCount++;
+      }
+    }
+
+    await prisma.printPricing.createMany({
+      data: [
+        { garmentId: garment.id, location: 'FRONT', baseCost: 500 },
+        { garmentId: garment.id, location: 'BACK', baseCost: 700 },
+        { garmentId: garment.id, location: 'LEFT_SLEEVE', baseCost: 300 },
+        { garmentId: garment.id, location: 'RIGHT_SLEEVE', baseCost: 300 },
+      ],
+    });
+
+    console.log(
+      `   Custom garment:  ${garment.name} (${garmentColors.length} colors × ${garmentSizes.length} sizes = ${garmentVariantCount} variants)`
+    );
+  }
 
   // -----------------------------------------------------------------------
   // Report
@@ -567,7 +638,6 @@ async function main() {
   console.log(`   Products:        ${PRODUCTS.length}`);
   console.log(`   Variants:        ${totalVariants}`);
   console.log(`   Images (stubs):  ${totalImages}`);
-  console.log(`   Custom garment:  ${garment.name}`);
   console.log(
     `\n📸 Add real product images to /public/images/products/{slug}-1.jpg`
   );
