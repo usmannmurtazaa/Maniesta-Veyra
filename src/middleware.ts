@@ -56,6 +56,6 @@ export const config = {
      *   - service worker & offline fallback
      *   - static assets & icons
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|favicon-32.png|favicon-192.png|apple-touch-icon.png|robots.txt|sitemap.xml|manifest.webmanifest|sw.js|offline.html|icons|images).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|favicon-32.png|favicon-192.png|apple-touch-icon.png|robots.txt|sitemap.xml|manifest.webmanifest|sw.js|service-worker.js|offline.html|icons|images).*)',
   ],
 };

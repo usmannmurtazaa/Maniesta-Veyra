@@ -115,7 +115,7 @@ const nextConfig = {
 // ---------------------------------------------------------------------------
 const withSerwist = withSerwistInit({
   swSrc: 'src/sw.ts',
-  swDest: 'public/sw.js',
+  swDest: 'public/service-worker.js',
   disable: isDev,
   register: true,
   reloadOnOnline: true,
