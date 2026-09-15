@@ -26,18 +26,12 @@ function createRedisClient(): Redis | null {
   });
 }
 
-// Module-level client — created once per cold start.
-// If the env vars are missing, `null` means "no rate limiting".
 const redis = createRedisClient();
 
 /**
  * Wraps a ratelimit check so that a failure of the rate limiter itself
  * (Redis down, token permissions, network error) does NOT crash the
  * request. Fail-open: allow the request through and log the error.
- *
- * Why: a rate limiter is a security control, not a core feature. It is
- * better to occasionally allow over-quota traffic than to 500 all
- * requests because Redis has a hiccup.
  */
 function createLimiter(prefix: string, limit: number, duration: Duration): Limiter {
   if (!redis) {
@@ -63,7 +57,6 @@ function createLimiter(prefix: string, limit: number, duration: Duration): Limit
           reset: result.reset,
         };
       } catch (error) {
-        // Fail-open. Log so we can see it in Netlify function logs.
         console.error(`[ratelimit:${prefix}] check failed:`, error);
         return { success: true };
       }
