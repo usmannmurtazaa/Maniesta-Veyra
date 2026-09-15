@@ -2,45 +2,73 @@ import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import { getServerEnv } from '@/lib/env';
 
-let redis: Redis | null = null;
-let redisInitialized = false;
+type Duration = `${number} s` | `${number} m` | `${number} h`;
 
-function getRedisClient(): Redis | null {
-  if (!redisInitialized) {
-    redisInitialized = true;
-    try {
-      const env = getServerEnv();
-      if (env.UPSTASH_REDIS_URL && env.UPSTASH_REDIS_TOKEN) {
-        redis = new Redis({
-          url: env.UPSTASH_REDIS_URL,
-          token: env.UPSTASH_REDIS_TOKEN,
-        });
-      }
-    } catch {
-      // Environment not fully available; fall back to no‑op limiter.
-      redis = null;
-    }
-  }
-  return redis;
+interface LimitResult {
+  success: boolean;
+  limit?: number;
+  remaining?: number;
+  reset?: number;
 }
 
-function createLimiter(
-  prefix: string,
-  limit: number,
-  duration: `${number}s` | `${number}m` | `${number}h`
-) {
-  const client = getRedisClient();
-  if (!client) {
+interface Limiter {
+  limit: (identifier: string) => Promise<LimitResult>;
+}
+
+function createRedisClient(): Redis | null {
+  const env = getServerEnv();
+  if (!env.UPSTASH_REDIS_URL || !env.UPSTASH_REDIS_TOKEN) {
+    return null;
+  }
+  return new Redis({
+    url: env.UPSTASH_REDIS_URL,
+    token: env.UPSTASH_REDIS_TOKEN,
+  });
+}
+
+// Module-level client — created once per cold start.
+// If the env vars are missing, `null` means "no rate limiting".
+const redis = createRedisClient();
+
+/**
+ * Wraps a ratelimit check so that a failure of the rate limiter itself
+ * (Redis down, token permissions, network error) does NOT crash the
+ * request. Fail-open: allow the request through and log the error.
+ *
+ * Why: a rate limiter is a security control, not a core feature. It is
+ * better to occasionally allow over-quota traffic than to 500 all
+ * requests because Redis has a hiccup.
+ */
+function createLimiter(prefix: string, limit: number, duration: Duration): Limiter {
+  if (!redis) {
     return {
       limit: async () => ({ success: true }),
     };
   }
 
-  return new Ratelimit({
-    redis: client,
+  const limiter = new Ratelimit({
+    redis,
     limiter: Ratelimit.slidingWindow(limit, duration),
     prefix,
   });
+
+  return {
+    limit: async (identifier: string): Promise<LimitResult> => {
+      try {
+        const result = await limiter.limit(identifier);
+        return {
+          success: result.success,
+          limit: result.limit,
+          remaining: result.remaining,
+          reset: result.reset,
+        };
+      } catch (error) {
+        // Fail-open. Log so we can see it in Netlify function logs.
+        console.error(`[ratelimit:${prefix}] check failed:`, error);
+        return { success: true };
+      }
+    },
+  };
 }
 
 export const rateLimiters = {
@@ -51,5 +79,4 @@ export const rateLimiters = {
   couponValidate: createLimiter('rl:coupon', 10, '1m'),
   reviewSubmit: createLimiter('rl:review', 3, '10m'),
   orderCreate: createLimiter('rl:order', 5, '1m'),
-  contact: createLimiter('rl:contact', 3, '10m'),
-};
+} as const;
