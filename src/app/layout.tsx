@@ -85,7 +85,11 @@ export default function RootLayout({
   const gaId = publicEnv.NEXT_PUBLIC_GA_ID;
 
   return (
-    <html lang="en" className={`${playfair.variable} ${inter.variable}`}>
+    <html
+      lang="en"
+      className={`${playfair.variable} ${inter.variable}`}
+      suppressHydrationWarning
+    >
       <head>
         {gaId && (
           <>
