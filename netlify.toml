@@ -28,7 +28,7 @@
   # Do NOT bundle these into the Lambda. Required for isomorphic-dompurify
   # (which loads jsdom at runtime) — jsdom reads its own .json data files
   # via fs, and those files are lost if webpack bundles jsdom.
-  external_node_modules = ["isomorphic-dompurify", "jsdom"]
+  external_node_modules = ["file-type", "image-size"]
 
 # ---------------------------------------------------------------------------
 # Disable Netlify asset optimization — Next.js already optimized everything.
